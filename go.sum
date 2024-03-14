@@ -48,6 +48,7 @@ github.com/Masterminds/semver/v3 v3.1.1 h1:hLg3sBzpNErnxhQtUy/mmLR2I9foDujNK030I
 github.com/Masterminds/semver/v3 v3.1.1/go.mod h1:VPu/7SZ7ePZ3QOrcuXROw5FAcLl4a0cBrbBpGY/8hQs=
 github.com/Netflix/go-expect v0.0.0-20180615182759-c93bf25de8e8 h1:xzYJEypr/85nBpB11F9br+3HUrpgb+fcm5iADzXXYEw=
 github.com/Netflix/go-expect v0.0.0-20180615182759-c93bf25de8e8/go.mod h1:oX5x61PbNXchhh0oikYAH+4Pcfw5LKv21+Jnpr6r6Pc=
+github.com/agiledragon/gomonkey/v2 v2.2.0 h1:QJWqpdEhGV/JJy70sZ/LDnhbSlMrqHAWHcNOjz1kyuI=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
@@ -65,10 +66,10 @@ github.com/bsm/redislock v0.9.3/go.mod h1:Epf7AJLiSFwLCiZcfi6pWFO/8eAYrYpQXFxEDP
 github.com/bytedance/sonic v1.5.0/go.mod h1:ED5hyg4y6t3/9Ku1R6dU/4KyJ48DZ4jPhfY1O2AihPM=
 github.com/bytedance/sonic v1.9.1 h1:6iJ6NqdoxCDr6mbY8h18oSO+cShGSMRGCEo7F2h0x8s=
 github.com/bytedance/sonic v1.9.1/go.mod h1:i736AoUSYt75HyZLoJW9ERYxcy6eaN6h4BZXU064P/U=
-github.com/casbin/casbin/v2 v2.69.1 h1:R3e7uveIRN5Pdqvq0GXEhXmn7HyfoEVjp21/mgEXbdI=
-github.com/casbin/casbin/v2 v2.69.1/go.mod h1:vByNa/Fchek0KZUgG5wEsl7iFsiviAYKRtgrQfcJqHg=
-github.com/casbin/gorm-adapter/v3 v3.18.0 h1:0td7v030eK3H5ftXRHx1d5wVPbuYEJP2ObMSUHtA0Ek=
-github.com/casbin/gorm-adapter/v3 v3.18.0/go.mod h1:ekufPNBgVIQvv9JffVGsg7KUv4DjnevTh6AQnBNkoK8=
+github.com/casbin/casbin/v2 v2.77.1 h1:+H46VamJCTlmCPcb0N99Zaj4tSorfuvBh3v5lyGopeU=
+github.com/casbin/casbin/v2 v2.77.1/go.mod h1:mzGx0hYW9/ksOSpw3wNjk3NRAroq5VMFYUQ6G43iGPk=
+github.com/casbin/gorm-adapter/v3 v3.21.0 h1:1YOVpBvGc38H717WKSNCUuhsixFOjF8jmNukq792WBc=
+github.com/casbin/gorm-adapter/v3 v3.21.0/go.mod h1:pvTTuyP2Es8VPHLyUssGtvOb3ETYD2tG7TfT5K8X2Sg=
 github.com/casbin/redis-watcher/v2 v2.5.0 h1:a0922GOKYDSSiD7hEQxmLh/psea2eLZtf1V12XzLI5w=
 github.com/casbin/redis-watcher/v2 v2.5.0/go.mod h1:lgtjnQrfbo+xZIwMPtLu9is/XpnCfAT94SLgMzY7HGk=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
@@ -516,6 +517,12 @@ github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcU
 github.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXlSw2iwfAo=
 github.com/subosito/gotenv v1.3.0 h1:mjC+YW8QpAdXibNi+vNWgzmgBH4+5l5dCXv8cNysBLI=
 github.com/subosito/gotenv v1.3.0/go.mod h1:YzJjq/33h7nrwdY+iHMhEOEEbW0ovIz0tB6t6PwAXzs=
+github.com/tidwall/gjson v1.14.4 h1:uo0p8EbA09J7RQaflQ1aBRffTR7xedD2bcIVSYxLnkM=
+github.com/tidwall/gjson v1.14.4/go.mod h1:/wbyibRr2FHMks5tjHJ5F8dMZh3AcwJEMf5vlfC0lxk=
+github.com/tidwall/match v1.1.1 h1:+Ho715JplO36QYgwN9PGYNhgZvoUSc9X2c80KVTi+GA=
+github.com/tidwall/match v1.1.1/go.mod h1:eRSPERbgtNPcGhD8UCthc6PmLEQXEWd3PRB5JTxsfmM=
+github.com/tidwall/pretty v1.2.0 h1:RWIZEg2iJ8/g6fDDYzMpobmaoGh5OLl4AXtGUGPcqCs=
+github.com/tidwall/pretty v1.2.0/go.mod h1:ITEVvHYasfjBbM0u2Pg8T2nJnzm8xPwvNhhsoaGGjNU=
 github.com/tsuyoshiwada/go-gitcmd v0.0.0-20180205145712-5f1f5f9475df h1:Y2l28Jr3vOEeYtxfVbMtVfOdAwuUqWaP9fvNKiBVeXY=
 github.com/tsuyoshiwada/go-gitcmd v0.0.0-20180205145712-5f1f5f9475df/go.mod h1:pnyouUty/nBr/zm3GYwTIt+qFTLWbdjeLjZmJdzJOu8=
 github.com/twitchyliquid64/golang-asm v0.15.1 h1:SU5vSMR7hnwNxj24w34ZyCi/FmDZTkS4MhqMhdFk5YI=

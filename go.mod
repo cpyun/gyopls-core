@@ -4,8 +4,8 @@ go 1.18
 
 require (
 	github.com/bsm/redislock v0.9.3
-	github.com/casbin/casbin/v2 v2.69.1
-	github.com/casbin/gorm-adapter/v3 v3.18.0
+	github.com/casbin/casbin/v2 v2.77.1
+	github.com/casbin/gorm-adapter/v3 v3.21.0
 	github.com/casbin/redis-watcher/v2 v2.5.0
 	github.com/fsnotify/fsnotify v1.5.4
 	github.com/gin-gonic/gin v1.9.1
@@ -108,6 +108,9 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/stretchr/testify v1.8.4 // indirect
 	github.com/subosito/gotenv v1.3.0 // indirect
+	github.com/tidwall/gjson v1.14.4 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/tsuyoshiwada/go-gitcmd v0.0.0-20180205145712-5f1f5f9475df // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
