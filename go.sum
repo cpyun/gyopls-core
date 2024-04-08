@@ -42,8 +42,6 @@ github.com/Azure/azure-sdk-for-go/sdk/internal v1.0.0/go.mod h1:eWRD7oawr1Mu1sLC
 github.com/AzureAD/microsoft-authentication-library-for-go v0.4.0/go.mod h1:Vt9sXTKwMyGcOxSmLDMnGPgqsUg7m8pe215qMLrDXw4=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
-github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible h1:1G1pk05UrOh0NlF1oeaaix1x8XzrfjIDK47TY0Zehcw=
-github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible/go.mod h1:r7JcOSlj0wfOMncg0iLm8Leh48TZaKVeNIfJntJ2wa0=
 github.com/Masterminds/semver/v3 v3.1.1 h1:hLg3sBzpNErnxhQtUy/mmLR2I9foDujNK030IGemrRc=
 github.com/Masterminds/semver/v3 v3.1.1/go.mod h1:VPu/7SZ7ePZ3QOrcuXROw5FAcLl4a0cBrbBpGY/8hQs=
 github.com/Netflix/go-expect v0.0.0-20180615182759-c93bf25de8e8 h1:xzYJEypr/85nBpB11F9br+3HUrpgb+fcm5iADzXXYEw=
@@ -65,10 +63,12 @@ github.com/bsm/redislock v0.9.3/go.mod h1:Epf7AJLiSFwLCiZcfi6pWFO/8eAYrYpQXFxEDP
 github.com/bytedance/sonic v1.5.0/go.mod h1:ED5hyg4y6t3/9Ku1R6dU/4KyJ48DZ4jPhfY1O2AihPM=
 github.com/bytedance/sonic v1.9.1 h1:6iJ6NqdoxCDr6mbY8h18oSO+cShGSMRGCEo7F2h0x8s=
 github.com/bytedance/sonic v1.9.1/go.mod h1:i736AoUSYt75HyZLoJW9ERYxcy6eaN6h4BZXU064P/U=
-github.com/casbin/casbin/v2 v2.69.1 h1:R3e7uveIRN5Pdqvq0GXEhXmn7HyfoEVjp21/mgEXbdI=
-github.com/casbin/casbin/v2 v2.69.1/go.mod h1:vByNa/Fchek0KZUgG5wEsl7iFsiviAYKRtgrQfcJqHg=
+github.com/casbin/casbin/v2 v2.87.1 h1:7H+ENAfYt3HmZJVw++tJsxx/ko7WEHsfNzpOdYTkpYo=
+github.com/casbin/casbin/v2 v2.87.1/go.mod h1:jX8uoN4veP85O/n2674r2qtfSXI6myvxW85f6TH50fw=
 github.com/casbin/gorm-adapter/v3 v3.18.0 h1:0td7v030eK3H5ftXRHx1d5wVPbuYEJP2ObMSUHtA0Ek=
 github.com/casbin/gorm-adapter/v3 v3.18.0/go.mod h1:ekufPNBgVIQvv9JffVGsg7KUv4DjnevTh6AQnBNkoK8=
+github.com/casbin/govaluate v1.1.0 h1:6xdCWIpE9CwHdZhlVQW+froUrCsjb6/ZYNcXODfLT+E=
+github.com/casbin/govaluate v1.1.0/go.mod h1:G/UnbIjZk/0uMNaLwZZmFQrR72tYRZWQkO70si/iR7A=
 github.com/casbin/redis-watcher/v2 v2.5.0 h1:a0922GOKYDSSiD7hEQxmLh/psea2eLZtf1V12XzLI5w=
 github.com/casbin/redis-watcher/v2 v2.5.0/go.mod h1:lgtjnQrfbo+xZIwMPtLu9is/XpnCfAT94SLgMzY7HGk=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
