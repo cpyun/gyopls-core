@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/bsm/redislock v0.9.3
-	github.com/casbin/casbin/v2 v2.69.1
+	github.com/casbin/casbin/v2 v2.95.0
 	github.com/casbin/gorm-adapter/v3 v3.18.0
 	github.com/casbin/redis-watcher/v2 v2.5.0
 	github.com/fsnotify/fsnotify v1.5.4
@@ -39,9 +39,9 @@ require (
 )
 
 require (
-	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bytedance/sonic v1.9.1 // indirect
+	github.com/casbin/govaluate v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
