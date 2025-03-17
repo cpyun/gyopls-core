@@ -2,18 +2,19 @@ package api
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/cpyun/gyopls-core/logger"
 	"github.com/cpyun/gyopls-core/sdk/pkg"
 	"github.com/cpyun/gyopls-core/sdk/pkg/response"
 	"github.com/cpyun/gyopls-core/sdk/service"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"net/http"
 )
 
 type Api struct {
 	Context *gin.Context
-	Logger  *logger.Helper
+	Logger  *logger.Logger
 	Orm     *gorm.DB
 	Errors  error
 	Msg     string
@@ -41,7 +42,7 @@ func (e *Api) MakeOrm() *Api {
 	var err error
 	db, err := pkg.GetOrm(e.Context)
 	if err != nil {
-		e.Logger.Error(http.StatusInternalServerError, err, "数据库连接获取失败")
+		e.Logger.Error("数据库连接获取失败", http.StatusInternalServerError, err.Error())
 		e.AddError(err)
 	}
 	e.Orm = db
@@ -52,7 +53,7 @@ func (e *Api) MakeOrm() *Api {
 func (e Api) GetOrm() *gorm.DB {
 	db, err := pkg.GetOrm(e.Context)
 	if err != nil {
-		e.Logger.Error(http.StatusInternalServerError, err, "数据库连接获取失败")
+		e.Logger.Error("数据库连接获取失败", http.StatusInternalServerError, err)
 	}
 	return db
 }

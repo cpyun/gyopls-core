@@ -1,48 +1,55 @@
 package config
 
-import "log"
+import (
+	"github.com/spf13/viper"
+)
 
-type Config struct {
-	Application *Application          `mapstructure:"application" json:"application" yaml:"application"`
-	Database    *Database             `json:"database" yaml:"database"`
-	Databases   *map[string]*Database `json:"databases" yaml:"databases"`
-	Logger      *Logger               `mapstructure:"logger" json:"logger" yaml:"logger"`
-	Cache       *Cache                `mapstructure:"cache" yaml:"cache" json:"cache"`
-	Filesystem  *Filesystem           `mapstructure:"filesystem" json:"mysql" yaml:"filesystem"`
-	Queue       *Queue                `json:"queue" yaml:"queue"`
-	Locker      *Locker               `json:"locker" yaml:"locker"`
-	JWT         *Jwt                  `mapstructure:"jwt" json:"jwt" yaml:"jwt"`
-	Redis       Redis                 `mapstructure:"redis" json:"redis" yaml:"redis"`
-	Casbin      *Casbin               `mapstructure:"casbin" json:"casbin" yaml:"casbin"`
-	Extend      interface{}           `yaml:"extend"`
-	//
-	opts setOptions
+type config struct {
+	handler *viper.Viper
+	opts    configOptions
 }
 
-func (c *Config) OnChange() {
-	//c.init()
-	log.Println("config change and reload")
-}
-
-//多db改造
-func (c *Config) multiDatabase() {
-	if len(*c.Databases) == 0 {
-		*c.Databases = map[string]*Database{
-			"*": c.Database,
+func (t *config) Load() error {
+	for _, src := range t.opts.sources {
+		if _, err := src.Read(); err != nil {
+			return err
 		}
 	}
+
+	return nil
 }
 
-func (c *Config) runCallback() {
-	for _, callback := range c.opts.callbacks {
-		callback()
+func (t *config) Scan(v any) error {
+	return t.handler.Unmarshal(v)
+}
+
+// func (t *config) Value(name string) reader.Value {
+// 	return t.handler.Get(name)
+// }
+
+// func (t *config) Watch(f func()) error {
+// 	t.handler.OnConfigChange(func(in fsnotify.Event) {
+
+// 	})
+// 	t.handler.WatchConfig()
+// 	return nil
+// }
+
+func (t *config) Close() error {
+	return nil
+}
+
+func (t *config) Handler() *viper.Viper {
+	return t.handler
+}
+
+func New(opts ...OptionFunc) *config {
+	c := &config{
+		handler: viper.GetViper(),
 	}
-}
-
-func (c *Config) init() {
-	c.Logger.Setup()
-	c.multiDatabase()
-
-	//调用回调函数
-	c.runCallback()
+	//
+	for _, f := range opts {
+		f(&c.opts)
+	}
+	return c
 }
