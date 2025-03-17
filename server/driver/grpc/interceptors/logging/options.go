@@ -162,7 +162,7 @@ func DefaultMessageProducer(ctx context.Context, msg string, level level.Level, 
 	// re-extract logger from newCtx, as it may have extra fields that changed in the holder.
 	fields := duration
 	fields.Set("grpc.code", code.String())
-	ctxlog.Extract(ctx).WithFields(fields.Values()).Log(level, msg, err)
+	ctxlog.Extract(ctx).With(fields.Values()).Log(level, msg, err)
 	//if err != nil {
 	//	ctxlog.Extract(ctx).WithFields(fields.Values()).Error(msg, err)
 	//	return

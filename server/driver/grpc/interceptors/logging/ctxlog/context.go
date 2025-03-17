@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/cpyun/gyopls-core/logger"
+	"github.com/cpyun/gyopls-core/logger/driver/zap"
 
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 )
@@ -11,13 +12,13 @@ import (
 type ctxMarker struct{}
 
 type ctxLogger struct {
-	logger *logger.Helper
+	logger *logger.Logger
 	fields map[string]interface{}
 }
 
 var (
 	ctxMarkerKey = &ctxMarker{}
-	nullLogger   = logger.NewHelper(logger.DefaultLogger)
+	nullLogger   = logger.NewHelper(zap.NewZap())
 )
 
 // AddFields adds logger fields to the logger.
@@ -34,7 +35,7 @@ func AddFields(ctx context.Context, fields map[string]interface{}) {
 // Extract takes the call-scoped Logger from grpc_logger middleware.
 //
 // It always returns a Logger that has all the grpc_ctxtags updated.
-func Extract(ctx context.Context) *logger.Helper {
+func Extract(ctx context.Context) *logger.Logger {
 	l, ok := ctx.Value(ctxMarkerKey).(*ctxLogger)
 	if !ok || l == nil {
 		return nullLogger
@@ -45,7 +46,7 @@ func Extract(ctx context.Context) *logger.Helper {
 	for k, v := range l.fields {
 		fields[k] = v
 	}
-	return l.logger.WithFields(fields)
+	return l.logger.With(fields)
 }
 
 // TagsToFields transforms the Tags on the supplied context into logger fields.
@@ -55,7 +56,7 @@ func TagsToFields(ctx context.Context) map[string]interface{} {
 
 // ToContext adds the logger.Logger to the context for extraction later.
 // Returning the new context that has been created.
-func ToContext(ctx context.Context, logger *logger.Helper) context.Context {
+func ToContext(ctx context.Context, logger *logger.Logger) context.Context {
 	l := &ctxLogger{
 		logger: logger,
 	}
@@ -65,23 +66,23 @@ func ToContext(ctx context.Context, logger *logger.Helper) context.Context {
 // Debug is equivalent to calling Debug on the logger.Logger in the context.
 // It is a no-op if the context does not contain a logger.Logger.
 func Debug(ctx context.Context, msg string, fields map[string]interface{}) {
-	Extract(ctx).Fields(fields).Log(logger.DebugLevel, msg)
+	Extract(ctx).With(fields).Debug(msg)
 }
 
 // Info is equivalent to calling Info on the logger.Logger in the context.
 // It is a no-op if the context does not contain a logger.Logger.
 func Info(ctx context.Context, msg string, fields map[string]interface{}) {
-	Extract(ctx).Fields(fields).Log(logger.InfoLevel, msg)
+	Extract(ctx).With(fields).Info(msg)
 }
 
 // Warn is equivalent to calling Warn on the logger.Logger in the context.
 // It is a no-op if the context does not contain a logger.Logger.
 func Warn(ctx context.Context, msg string, fields map[string]interface{}) {
-	Extract(ctx).Fields(fields).Log(logger.WarnLevel, msg)
+	Extract(ctx).With(fields).Warn(msg)
 }
 
 // Error is equivalent to calling Error on the logger.Logger in the context.
 // It is a no-op if the context does not contain a logger.Logger.
 func Error(ctx context.Context, msg string, fields map[string]interface{}) {
-	Extract(ctx).Fields(fields).Log(logger.ErrorLevel, msg)
+	Extract(ctx).With(fields).Error(msg)
 }

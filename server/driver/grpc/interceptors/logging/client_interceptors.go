@@ -27,7 +27,7 @@ func UnaryClientInterceptor(opts ...Option) grpc.UnaryClientInterceptor {
 		fields := newClientLoggerFields(ctx, method)
 		start := time.Now()
 		err := invoker(ctx, method, req, reply, cc, opts...)
-		logFinalClientLine(o, ctxlog.Extract(ctx).WithFields(fields.Values()), start, err,
+		logFinalClientLine(o, ctxlog.Extract(ctx).With(fields.Values()), start, err,
 			"finished client unary call")
 		return err
 	}
@@ -43,13 +43,13 @@ func StreamClientInterceptor(opts ...Option) grpc.StreamClientInterceptor {
 		fieles := newClientLoggerFields(ctx, method)
 		start := time.Now()
 		clientStream, err := streamer(ctx, desc, cc, method, opts...)
-		logFinalClientLine(o, ctxlog.Extract(ctx).WithFields(fieles.Values()),
+		logFinalClientLine(o, ctxlog.Extract(ctx).With(fieles.Values()),
 			start, err, "finished client streaming call")
 		return clientStream, err
 	}
 }
 
-func logFinalClientLine(o *options, l *logger.Helper, start time.Time, err error, msg string) {
+func logFinalClientLine(o *options, l *logger.Logger, start time.Time, err error, msg string) {
 	code := o.codeFunc(err)
 	level := o.levelFunc(code)
 
@@ -58,7 +58,7 @@ func logFinalClientLine(o *options, l *logger.Helper, start time.Time, err error
 	if err != nil {
 
 	}
-	l.WithFields(f.Values()).Log(level, msg, err)
+	l.With(f.Values()).Log(level, msg, err)
 }
 
 func newClientLoggerFields(
