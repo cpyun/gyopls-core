@@ -1,8 +1,9 @@
-package pkg
+package utils
 
 import (
 	"crypto/rand"
 	"encoding/hex"
+
 	"golang.org/x/crypto/scrypt"
 )
 
