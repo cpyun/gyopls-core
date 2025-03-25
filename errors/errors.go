@@ -4,6 +4,8 @@ package errors
 
 import (
 	"fmt"
+
+	"github.com/cpyun/gyopls-core/contract"
 	json "github.com/json-iterator/go"
 )
 
@@ -23,7 +25,7 @@ func (e *Error) Error() string {
 }
 
 // New generates a custom error.
-func New(id, domain string, code ErrorCoder) error {
+func New(id, domain string, code contract.ErrorCoder) error {
 	return &Error{
 		ErrorCode:    fmt.Sprintf("C%d", code.Code()),
 		ErrorMessage: code.String(),

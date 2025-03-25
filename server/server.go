@@ -1,10 +1,3 @@
-/*
- * @Author: lwnmengjing
- * @Date: 2021/6/7 5:43 下午
- * @Last Modified by: lwnmengjing
- * @Last Modified time: 2021/6/7 5:43 下午
- */
-
 package server
 
 import (
@@ -14,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/cpyun/gyopls-core/logger"
+	"golang.org/x/sync/errgroup"
 )
 
 type Server struct {
@@ -21,12 +15,13 @@ type Server struct {
 	mutex                  sync.Mutex
 	errChan                chan error
 	waitForRunnable        sync.WaitGroup
+	errGroup               errgroup.Group
 	internalCtx            context.Context
 	internalCancel         context.CancelFunc
 	internalProceduresStop chan struct{}
 	shutdownCtx            context.Context
 	shutdownCancel         context.CancelFunc
-	logger                 *logger.Helper
+	logger                 *logger.Logger
 	opts                   options
 }
 
@@ -53,8 +48,8 @@ func (e *Server) Add(r ...Runnable) {
 	if e.services == nil {
 		e.services = make(map[string]Runnable)
 	}
-	for i := range r {
-		e.services[r[i].String()] = r[i]
+	for _, v := range r {
+		e.services[v.String()] = v
 	}
 }
 
@@ -68,8 +63,8 @@ func (e *Server) Start(ctx context.Context) (err error) {
 	}()
 	e.errChan = make(chan error)
 
-	for k := range e.services {
-		if !e.services[k].Attempt() {
+	for _, v := range e.services {
+		if !v.Attempt() {
 			//先判断是否可以启动
 			return errors.New("can't accept new runnable as stop procedure is already engaged")
 		}
@@ -79,6 +74,9 @@ func (e *Server) Start(ctx context.Context) (err error) {
 		e.startRunnable(e.services[k])
 	}
 	e.waitForRunnable.Wait()
+	if err = e.errGroup.Wait(); err != nil {
+		e.errChan <- err
+	}
 	select {
 	case <-ctx.Done():
 		return nil
@@ -89,12 +87,14 @@ func (e *Server) Start(ctx context.Context) (err error) {
 
 func (e *Server) startRunnable(r Runnable) {
 	e.waitForRunnable.Add(1)
-	go func() {
+	e.errGroup.Go(func() error {
 		defer e.waitForRunnable.Done()
 		if err := r.Start(e.internalCtx); err != nil {
 			e.errChan <- err
+			return err
 		}
-	}()
+		return nil
+	})
 }
 
 func (e *Server) shutdownStopComplete(err error) error {
@@ -126,7 +126,7 @@ func (e *Server) engageStopProcedure(stopComplete <-chan struct{}) error {
 			select {
 			case err, ok := <-e.errChan:
 				if ok {
-					e.logger.Error(err, "error received after stop sequence was engaged")
+					e.logger.Error("error received after stop sequence was engaged", "error", err.Error())
 				}
 			case <-stopComplete:
 				return

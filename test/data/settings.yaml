@@ -1,0 +1,113 @@
+# Global configuration
+
+application:
+  # debug开发环境 test测试环境 release线上环境
+  mode: "release"
+
+server:
+  test:
+    # 服务名称
+    driver: http
+    # 服务器ip，默认使用 0.0.0.0
+    host: 0.0.0.0
+    # 端口号
+    port: 45681
+  test1:
+    # 服务名称
+    port: 45682
+
+logger:
+  # 日志驱动， default: 系统默认, zap: uber zap
+  type: "zap"
+  # 日志输出路径
+  path: 
+    - "stdout"
+    - "/logs/log.log"
+  # 日志输出，json：json，console: console, text：格式化文本
+  encode: "json"
+  # 日志等级, trace, debug, info, warn, error, fatal
+  level: "warn"
+  # 日志时间格式
+  time-format: "2006/01/02 15:04:05 +0800"       # 2006-01-02T15:04:05Z08:00
+  # 日志裁切
+  cut:
+    cap: 100        # 大小，单位MB
+    max-age: 0      # 备份最大天数
+    max-backups: 0  # 备份最大数
+    compress: true  # 是否压缩.gz
+
+cache:
+  # 缓存类型 redis， memory
+  driver: redis
+  redis:
+    # path "/3" was overridden by "&db=1"
+    dsn: "redis://user:password@127.0.0.1:6789/3?dial_timeout=3&db=1&read_timeout=6s&max_retries=2"
+    prefix: "cp:"
+
+# 数据库
+databases:
+  mysql1:
+    driver: mysql
+    dsn: root:123456@tcp(192.168.99.77:3306)/pwd_mall?charset=utf8&parseTime=True&loc=Local&timeout=1000ms
+    conn-max-idletime: 1
+    conn-max-lifetime: 1
+    max-idle-conns: 0
+    max-open-conns: 0
+    prefix: cp_
+    register:
+      - sources:
+          - user:password@tcp(127.0.0.1:3306)/dbname?charset=utf8&parseTime=True&loc=Local&timeout=1000ms
+        replicas:
+          - user:password@tcp(127.0.0.1:33062)/dbname?charset=utf8&parseTime=True&loc=Local&timeout=1000ms
+          - user:password@tcp(127.0.0.1:33063)/dbname?charset=utf8&parseTime=True&loc=Local&timeout=1000ms
+        tables:
+          - "users"
+          - "orders"
+          - "product"
+        policy: "random"
+      - sources:
+          - user:password@tcp(127.0.0.1:3306)/dbname?charset=utf8&parseTime=True&loc=Local&timeout=1000ms
+        replicas:
+          - user:password@tcp(127.0.0.1:33062)/dbname?charset=utf8&parseTime=True&loc=Local&timeout=1000ms
+        tables:
+          - "users"
+        policy: "random"
+
+
+
+
+jwt:
+  # token 密钥，生产环境时及的修改
+  signing-key: "cpyun"
+  # token 过期时间 单位：秒
+  expires-time: 604800
+  buffer-time: 96400
+  issuer: "cpyun"
+
+redis:
+  dsn: "redis://user:password@localhost:6789/3?dial_timeout=3&db=1&read_timeout=6s&max_retries=2&pool_size=10&write_timeout=10&conn_max_lifetime=10"
+
+locker:
+  driver: "redis"
+
+casbin:
+  model-path: "./config/rbac_model.conf"
+  redis:
+    network: "tcp"
+    addr: "127.0.0.1:6379"
+    password: ""
+
+filesystem:
+  driver: minio
+  minio:
+    endpoint: "127.0.0.1:9000"
+    access-key-id: "accessKey"
+    secret-access-key: "secretKey"
+    region: "cn-north-1"
+    secure: false
+    bucket: "bucketName"
+
+# 扩展项使用说明
+extend:
+  demo:
+    name: test

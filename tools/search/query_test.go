@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/smartystreets/goconvey/convey"
+	c "github.com/smartystreets/goconvey/convey"
 )
 
 type ApplicationQuery struct {
@@ -30,7 +30,7 @@ type TestJoin struct {
 
 func TestResolveSearchQuery(t *testing.T) {
 	// Only pass t into top-level Convey calls
-	Convey("Given some integer with a starting value", t, func() {
+	c.Convey("Given some integer with a starting value", t, func() {
 		d := ApplicationQuery{
 			Id:               "aaa",
 			Domain:           "bbb",
