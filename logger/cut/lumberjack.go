@@ -46,6 +46,7 @@ func Newcut(opts ...OptionFunc) *Cut {
 		opts: setDefault(),
 	}
 	c.withOption(opts...)
+	c.init()
 
 	return c
 }

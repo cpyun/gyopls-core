@@ -22,6 +22,7 @@ type OptionFunc func(o *zapOption)
 
 func setDefaultOptions() zapOption {
 	return zapOption{
+		mode:          "release",
 		level:         zapcore.InfoLevel,
 		callerSkipKey: 1,
 		outputPaths:   []string{"stdout"},

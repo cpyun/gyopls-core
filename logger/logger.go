@@ -1,6 +1,8 @@
 package logger
 
 import (
+	"os"
+
 	"github.com/cpyun/gyopls-core/contract"
 	"github.com/cpyun/gyopls-core/logger/level"
 )
@@ -80,6 +82,7 @@ func (t *Logger) Error(msg string, args ...any) {
 
 func (t *Logger) Fatal(msg string, args ...any) {
 	t.Log(level.FatalLevel, msg, args...)
+	os.Exit(1)
 }
 
 func (t *Logger) Store(name string) contract.LoggerHandler {

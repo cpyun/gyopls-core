@@ -5,6 +5,7 @@ import (
 	"sync/atomic"
 
 	"github.com/cpyun/gyopls-core/contract"
+	"github.com/cpyun/gyopls-core/logger/driver/zap"
 )
 
 var (
@@ -14,7 +15,7 @@ var (
 
 func init() {
 	once.Do(func() {
-		// defaultLogger.Store(NewHelper())
+		defaultLogger.Store(NewLogger(zap.NewZap()))
 	})
 }
 

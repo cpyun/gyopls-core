@@ -80,9 +80,6 @@ func (l *zapLog) getZapConfig() zap.Config {
 	// Level
 	zapConfig.Level.SetLevel(l.opts.level)
 
-	// Encoding
-	// zapConfig.Encoding = "console"
-
 	// OutputPaths
 	if len(l.opts.outputPaths) > 0 {
 		zapConfig.OutputPaths = l.opts.outputPaths
@@ -156,6 +153,7 @@ func (l *zapLog) Log(level level.Level, msg string, args ...any) {
 	data := l.parseZapFields(args...)
 
 	l.handler.Log(lvl, msg, data...)
+	l.handler.WithOptions()
 	defer l.handler.Sync()
 }
 
