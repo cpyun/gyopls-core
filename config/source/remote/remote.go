@@ -12,14 +12,16 @@ type remote struct {
 }
 
 func (r *remote) Read() (*source.ChangeSet, error) {
-	provider := r.opts.Context.Value(remoteProvider{}).(remoteProvider)
+	v := viper.GetViper()
+	v.SetConfigType("properties")
 
-	err := viper.AddRemoteProvider(provider.name, provider.endpoint, provider.path)
+	provider := r.opts.Context.Value(remoteProvider{}).(remoteProvider)
+	err := v.AddRemoteProvider(provider.name, provider.endpoint, provider.path)
 	if err != nil {
 		return nil, err
 	}
 
-	err = viper.ReadRemoteConfig()
+	err = v.ReadRemoteConfig()
 
 	cs := &source.ChangeSet{
 		Format:    "json",
