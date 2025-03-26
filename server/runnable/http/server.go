@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"sync"
 
 	"github.com/cpyun/gyopls-core/server"
 )
@@ -14,13 +13,12 @@ type httpApt struct {
 	//ctx     context.Context
 	name    string
 	srv     *http.Server
-	mux     sync.Mutex
-	opts    options
 	started bool
+	opts    httpOptions
 }
 
 // Options 设置参数
-func (e *httpApt) applyOptions(opts ...Option) {
+func (e *httpApt) applyOptions(opts ...OptionFunc) {
 	for _, o := range opts {
 		o(&e.opts)
 	}
@@ -32,10 +30,6 @@ func (e *httpApt) String() string {
 
 // Start 开始
 func (e *httpApt) Start(ctx context.Context) (err error) {
-	e.mux.Lock()
-	defer e.mux.Unlock()
-
-	e.started = true
 	e.srv = &http.Server{
 		Addr:         e.opts.addr,
 		Handler:      e.opts.handler,
@@ -45,32 +39,24 @@ func (e *httpApt) Start(ctx context.Context) (err error) {
 			return ctx
 		},
 	}
+	e.started = true
+	if e.opts.startedHook != nil {
+		e.opts.startedHook()
+	}
 	if e.opts.endHook != nil {
 		e.srv.RegisterOnShutdown(e.opts.endHook)
 	}
 
-	go func() {
-		if e.opts.cert != nil {
-			err = e.srv.ListenAndServeTLS(e.opts.cert.certFile, e.opts.cert.keyFile)
-		} else {
-			err = e.srv.ListenAndServe()
-		}
-		if err != nil && err != http.ErrServerClosed {
-			fmt.Errorf("%s Server start error: %s \r\n", e.name, err.Error())
-		}
-	}()
-
-	go func() {
-		if err = e.Shutdown(ctx); err != nil && err != context.Canceled {
-			fmt.Errorf("%s server shutdown error: %s \r\n", e.name, err.Error())
-		}
-	}()
-
-	if e.opts.startedHook != nil {
-		e.opts.startedHook()
+	// 启动
+	if e.opts.cert != nil {
+		err = e.srv.ListenAndServeTLS(e.opts.cert.certFile, e.opts.cert.keyFile)
+	} else {
+		err = e.srv.ListenAndServe()
+	}
+	if err != nil && err != http.ErrServerClosed {
+		return fmt.Errorf("%s Server start error: %s \r\n", e.name, err.Error())
 	}
 
-	fmt.Printf("- [%s] Server listening on %s \r\n", e.name, e.srv.Addr)
 	return nil
 }
 
@@ -86,7 +72,7 @@ func (e *httpApt) Shutdown(ctx context.Context) error {
 }
 
 // New 实例化
-func New(name string, opts ...Option) server.Runnable {
+func New(name string, opts ...OptionFunc) server.Runnable {
 	s := &httpApt{
 		name: name,
 		opts: setDefaultOption(),

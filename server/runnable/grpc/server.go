@@ -2,10 +2,8 @@ package grpc
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net"
-	"sync"
 
 	middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
@@ -16,16 +14,19 @@ import (
 type Server struct {
 	name    string
 	srv     *grpc.Server
-	mux     sync.Mutex
 	started bool
-	options Options
+	options grpcOptions
 }
 
 // New new grpc server
-func New(name string, options ...Option) *Server {
-	s := &Server{name: name}
-	s.Options(options...)
-	s.NewServer()
+func New(name string, opts ...Optionfunc) *Server {
+	s := &Server{
+		name:    name,
+		options: *defaultOptions(),
+	}
+	s.applyOptions(opts...)
+
+	s.init()
 	return s
 }
 
@@ -34,18 +35,13 @@ func (e *Server) String() string {
 	return e.name
 }
 
-func (e *Server) Options(options ...Option) {
-	e.options = *defaultOptions()
-	for _, o := range options {
+func (e *Server) applyOptions(opts ...Optionfunc) {
+	for _, o := range opts {
 		o(&e.options)
 	}
 }
 
-func (e *Server) Server() *grpc.Server {
-	return e.srv
-}
-
-func (e *Server) NewServer() {
+func (e *Server) init() {
 	grpc.EnableTracing = false
 	e.srv = grpc.NewServer(e.initGrpcServerOptions()...)
 }
@@ -74,37 +70,23 @@ func (e *Server) initGrpcServerOptions() []grpc.ServerOption {
 }
 
 func (e *Server) Start(ctx context.Context) error {
-	e.mux.Lock()
-	defer e.mux.Unlock()
-
-	if e.started {
-		return errors.New("gRPC Server was started more than once. " +
+	if !e.Attempt() {
+		return fmt.Errorf("gRPC Server was started more than once. " +
 			"This is likely to be caused by being added to a manager multiple times")
 	}
-	// Set the internal context
-	if e.options.ctx != nil {
-		ctx = e.options.ctx
-	}
+	e.started = true
+	e.options.startedHook()
 
 	ts, err := net.Listen("tcp", e.options.addr)
 	if err != nil {
 		return fmt.Errorf("gRPC Server listening on %s failed: %w", e.options.addr, err)
 	}
-	fmt.Printf("gRPC Server listening on %s \r\n", ts.Addr().String())
 
-	go func() {
-		if err = e.srv.Serve(ts); err != nil {
-			fmt.Errorf("gRPC Server start error: %s \r\n", err.Error())
-		}
-	}()
+	// 启动服务
+	if err = e.srv.Serve(ts); err != nil {
+		return fmt.Errorf("gRPC Server start error: %s \r\n", err.Error())
+	}
 
-	go func() {
-		if err = e.Shutdown(ctx); err != nil {
-			fmt.Errorf("gRPC Server shutdown error: %s \r\n", err.Error())
-		}
-	}()
-
-	e.started = true
 	return nil
 }
 
@@ -114,7 +96,8 @@ func (e *Server) Attempt() bool {
 
 func (e *Server) Shutdown(ctx context.Context) error {
 	<-ctx.Done()
-	fmt.Println("gRPC Server will be shutdown gracefully")
+	e.options.endHook()
+
 	e.srv.GracefulStop()
 	return nil
 }

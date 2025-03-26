@@ -12,7 +12,7 @@ import (
 	"path"
 	"time"
 
-	"github.com/cpyun/gyopls-core/server/driver/grpc/interceptors/logging/ctxlog"
+	"github.com/cpyun/gyopls-core/server/runnable/grpc/interceptors/logging/ctxlog"
 	"github.com/cpyun/gyopls-core/tools/utils"
 	middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"google.golang.org/grpc"

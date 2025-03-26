@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/cpyun/gyopls-core/logger"
-	"github.com/cpyun/gyopls-core/server/driver/grpc/interceptors/logging/ctxlog"
+	"github.com/cpyun/gyopls-core/server/runnable/grpc/interceptors/logging/ctxlog"
 	"google.golang.org/grpc"
 )
 
