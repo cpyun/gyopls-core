@@ -10,25 +10,17 @@ import (
 )
 
 type zapLog struct {
-	handler *zap.Logger // zap句柄
+	// handler *zap.Logger        // zap句柄
+	handler *zap.SugaredLogger // sugared
 	opts    zapOption
 }
 
 func (l *zapLog) init() {
 	var allCore []zapcore.Core
+	allCore = append(allCore, zapcore.NewCore(l.getZapEncoder(), l.getZapWriteSyncer(), l.opts.level))
 
-	zapConfig := l.getZapConfig()
-	encoder := l.getZapEncoder(zapConfig)
-	writeSyncer := l.getZapWriteSyncer(zapConfig)
-	allCore = append(allCore, zapcore.NewCore(encoder, writeSyncer, zapConfig.Level))
-	//
-	// logCore := zapcore.NewCore(
-	// 	zapcore.NewConsoleEncoder(zapConfig.EncoderConfig),
-	// 	zapcore.NewMultiWriteSyncer(zapcore.AddSync(writer)),
-	// 	zapConfig.Level)
-
-	fields := []zap.Field{}
 	// Adding namespace
+	fields := []zap.Field{}
 	if l.opts.namespaceKey != "" {
 		fields = append(fields, zap.Namespace(l.opts.namespaceKey))
 	}
@@ -43,21 +35,16 @@ func (l *zapLog) init() {
 	)
 
 	// defer log.Sync() ??
-	l.handler = log
+	// l.handler = log
+	l.handler = log.Sugar()
 }
 
-func (l *zapLog) getZapWriteSyncer(cfg zap.Config) zapcore.WriteSyncer {
-	// return zapcore.AddSync(l.opts.out)
-	var ws []zapcore.WriteSyncer
-	for _, out := range cfg.OutputPaths {
-		// cutter 需要注意 stderr|stdout 两种情况
-		ws = append(ws, zapcore.AddSync(l.opts.cutter.SetFile(out)))
-	}
-
-	return zapcore.NewMultiWriteSyncer(ws...)
+func (l *zapLog) getZapWriteSyncer() zapcore.WriteSyncer {
+	return zapcore.NewMultiWriteSyncer(l.opts.output...)
 }
 
-func (l *zapLog) getZapEncoder(cfg zap.Config) zapcore.Encoder {
+func (l *zapLog) getZapEncoder() zapcore.Encoder {
+	cfg := l.getZapConfig()
 	if cfg.Encoding == "console" {
 		return zapcore.NewConsoleEncoder(cfg.EncoderConfig)
 	}
@@ -79,11 +66,6 @@ func (l *zapLog) getZapConfig() zap.Config {
 
 	// Level
 	zapConfig.Level.SetLevel(l.opts.level)
-
-	// OutputPaths
-	if len(l.opts.outputPaths) > 0 {
-		zapConfig.OutputPaths = l.opts.outputPaths
-	}
 
 	// EncoderConfig
 	zapConfig.EncoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
@@ -139,8 +121,8 @@ func (l *zapLog) parseZapFields(args ...any) []zap.Field {
 }
 
 func (l *zapLog) With(fields ...any) contract.LoggerHandler {
-	zapField := l.parseZapFields(fields...)
-	newHandler := l.handler.With(zapField...)
+	// zapField := l.parseZapFields(fields...)
+	newHandler := l.handler.With(fields...)
 	//
 	return &zapLog{
 		handler: newHandler,
@@ -150,10 +132,9 @@ func (l *zapLog) With(fields ...any) contract.LoggerHandler {
 
 func (l *zapLog) Log(level level.Level, msg string, args ...any) {
 	lvl := loggerLevelToZapLevel(level)
-	data := l.parseZapFields(args...)
+	// data := l.parseZapFields(args...)
 
-	l.handler.Log(lvl, msg, data...)
-	l.handler.WithOptions()
+	l.handler.Logw(lvl, msg, args...)
 	defer l.handler.Sync()
 }
 
@@ -190,7 +171,6 @@ func zaplevelToLoggerLevel(l zapcore.Level) level.Level {
 	}
 }
 
-// func loggerLevelToZapLevel(l level.Level) zapcore.Level {}
 func loggerLevelToZapLevel(l level.Level) zapcore.Level {
 	switch l {
 	case level.TraceLevel, level.DebugLevel:

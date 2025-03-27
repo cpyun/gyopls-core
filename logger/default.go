@@ -15,8 +15,15 @@ var (
 
 func init() {
 	once.Do(func() {
-		defaultLogger.Store(NewLogger(zap.NewZap()))
+		defaultLogger.Store(NewLogger(zap.NewZap(
+			zap.WithCallerSkip(1),
+		)))
 	})
+}
+
+// Default returns the default [Logger].
+func Default() *Logger {
+	return defaultLogger.Load()
 }
 
 func SetDefault(l contract.LoggerHandler) {

@@ -23,7 +23,6 @@ $ go get github.com/cpyun/gyopls-core
 
 ## Thanks
 The following are ranked in no particular order
-- [gin-gonic/gin](https://github.com/gin-gonic/gin)
 - [gorm](https://gorm.io/gorm)
 - [spf13/viper](https://github.com/spf13/viper)
 - [go-admin](https://github.com/go-admin-team/go-admin)
