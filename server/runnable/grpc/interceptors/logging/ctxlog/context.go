@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/cpyun/gyopls-core/logger"
-	"github.com/cpyun/gyopls-core/logger/driver/zap"
 
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 )
@@ -18,7 +17,7 @@ type ctxLogger struct {
 
 var (
 	ctxMarkerKey = &ctxMarker{}
-	nullLogger   = logger.NewHelper(zap.NewZap())
+	nullLogger   = logger.Default()
 )
 
 // AddFields adds logger fields to the logger.

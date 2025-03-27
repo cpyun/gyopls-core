@@ -1,32 +1,31 @@
 package zap
 
 import (
-	"github.com/cpyun/gyopls-core/logger/cut"
-	"go.uber.org/zap"
+	"os"
+
+	"github.com/cpyun/gyopls-core/logger/level"
+	"github.com/cpyun/gyopls-core/logger/output"
 	"go.uber.org/zap/zapcore"
 )
 
 type zapOption struct {
-	mode             string
-	level            zapcore.Level
-	callerSkipKey    int
-	configKey        zap.Config
-	encoderConfigKey zapcore.EncoderConfig
-	namespaceKey     string
-	timeFormat       string
-	outputPaths      []string
-	cutter           *cut.Cut
+	mode          string
+	level         zapcore.Level
+	callerSkipKey int
+	namespaceKey  string
+	timeFormat    string
+	output        []zapcore.WriteSyncer // 默认console writer
 }
 
 type OptionFunc func(o *zapOption)
 
 func setDefaultOptions() zapOption {
 	return zapOption{
-		mode:          "release",
+		mode:          "production",
 		level:         zapcore.InfoLevel,
-		callerSkipKey: 1,
-		outputPaths:   []string{"stdout"},
-		cutter:        cut.Newcut(),
+		callerSkipKey: 3,
+		timeFormat:    "2006-01-02T15:04:05.000Z07:00",
+		output:        []zapcore.WriteSyncer{zapcore.Lock(os.Stderr)},
 	}
 }
 
@@ -36,32 +35,15 @@ func WithModel(name string) OptionFunc {
 	}
 }
 
-func WithLevel(level zapcore.Level) OptionFunc {
+func WithLevel(lvl level.Level) OptionFunc {
 	return func(o *zapOption) {
-		o.level = level
+		o.level = loggerLevelToZapLevel(lvl)
 	}
 }
 
 func WithCallerSkip(i int) OptionFunc {
 	return func(o *zapOption) {
-		if i < 1 {
-			i = 1
-		}
-		o.callerSkipKey = i
-	}
-}
-
-// WithConfig pass zap.Config to logger
-func WithConfig(c zap.Config) OptionFunc {
-	return func(o *zapOption) {
-		o.configKey = c
-	}
-}
-
-// WithEncoderConfig pass zapcore.EncoderConfig to logger
-func WithEncoderConfig(c zapcore.EncoderConfig) OptionFunc {
-	return func(o *zapOption) {
-		o.encoderConfigKey = c
+		o.callerSkipKey += i
 	}
 }
 
@@ -71,14 +53,20 @@ func WithNamespace(namespace string) OptionFunc {
 	}
 }
 
-func WithOutputPath(out ...string) OptionFunc {
-	return func(o *zapOption) {
-		o.outputPaths = out
-	}
-}
-
 func WithTimeFormat(timeFormat string) OptionFunc {
 	return func(o *zapOption) {
 		o.timeFormat = timeFormat
+	}
+}
+
+func WithOutput(output ...output.Output) OptionFunc {
+	return func(o *zapOption) {
+		if len(output) == 0 {
+			return
+		}
+
+		for _, out := range output {
+			o.output = append(o.output, zapcore.AddSync(out))
+		}
 	}
 }

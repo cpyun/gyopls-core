@@ -1,11 +1,16 @@
 package server
 
-import "time"
+import (
+	"time"
+
+	"github.com/cpyun/gyopls-core/logger"
+)
 
 type OptionFunc func(*options)
 
 type options struct {
 	gracefulShutdownTimeout time.Duration
+	logger                  *logger.Logger
 }
 
 func setDefaultOptions() options {

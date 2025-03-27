@@ -46,6 +46,7 @@ func (t *config) Handler() *viper.Viper {
 func New(opts ...OptionFunc) *config {
 	c := &config{
 		handler: viper.GetViper(),
+		opts:    setDefaultOption(),
 	}
 	//
 	for _, f := range opts {

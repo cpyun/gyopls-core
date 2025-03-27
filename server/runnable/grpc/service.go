@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cpyun/gyopls-core/server/driver/grpc/interceptors/logging"
-	reqtags "github.com/cpyun/gyopls-core/server/driver/grpc/interceptors/request_tag"
+	"github.com/cpyun/gyopls-core/server/runnable/grpc/interceptors/logging"
+	reqtags "github.com/cpyun/gyopls-core/server/runnable/grpc/interceptors/request_tag"
 	middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	opentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
 	"google.golang.org/grpc"

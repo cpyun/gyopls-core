@@ -46,5 +46,18 @@ func New() contract.LoggerHandler {
 }
 
 func levlToSlogLeve(lvl level.Level) slog.Level {
-	return slog.LevelDebug
+	switch lvl {
+	case level.TraceLevel, level.DebugLevel:
+		return slog.LevelDebug
+	case level.InfoLevel:
+		return slog.LevelInfo
+	case level.WarnLevel:
+		return slog.LevelWarn
+	case level.ErrorLevel:
+		return slog.LevelError
+	case level.FatalLevel:
+		return slog.LevelError
+	default:
+		return slog.LevelInfo
+	}
 }

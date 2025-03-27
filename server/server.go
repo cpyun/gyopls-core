@@ -2,42 +2,31 @@ package server
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync"
 
-	"github.com/cpyun/gyopls-core/logger"
 	"golang.org/x/sync/errgroup"
 )
 
 type Server struct {
-	services               map[string]Runnable
-	mutex                  sync.Mutex
-	errChan                chan error
-	waitForRunnable        sync.WaitGroup
-	errGroup               errgroup.Group
-	internalCtx            context.Context
-	internalCancel         context.CancelFunc
-	internalProceduresStop chan struct{}
-	shutdownCtx            context.Context
-	shutdownCancel         context.CancelFunc
-	logger                 *logger.Logger
-	opts                   options
+	services    map[string]Runnable
+	mutex       sync.RWMutex
+	errGroup    *errgroup.Group
+	internalCtx context.Context
+	opts        options
 }
 
 // New 实例化
 func New(opts ...OptionFunc) *Server {
 	s := &Server{
-		services:               make(map[string]Runnable),
-		errChan:                make(chan error),
-		internalProceduresStop: make(chan struct{}),
+		services: make(map[string]Runnable),
+		opts:     setDefaultOptions(),
 	}
-	s.opts = setDefaultOptions()
-	s.withOptions(opts...)
+	s.applyOptions(opts...)
 	return s
 }
 
-func (e *Server) withOptions(opts ...OptionFunc) {
+func (e *Server) applyOptions(opts ...OptionFunc) {
 	for _, opt := range opts {
 		opt(&e.opts)
 	}
@@ -48,6 +37,10 @@ func (e *Server) Add(r ...Runnable) {
 	if e.services == nil {
 		e.services = make(map[string]Runnable)
 	}
+
+	e.mutex.Lock()
+	defer e.mutex.Unlock()
+
 	for _, v := range r {
 		e.services[v.String()] = v
 	}
@@ -55,107 +48,69 @@ func (e *Server) Add(r ...Runnable) {
 
 // Start 启动 runnable
 func (e *Server) Start(ctx context.Context) (err error) {
-	e.mutex.Lock()
-	defer e.mutex.Unlock()
-	e.internalCtx, e.internalCancel = context.WithCancel(context.Background())
-	defer func() {
-		err = e.shutdownStopComplete(err)
-	}()
-	e.errChan = make(chan error)
+	e.errGroup, e.internalCtx = errgroup.WithContext(ctx)
+	// 启动
+	e.mutex.RLock()
+	for _, srv := range e.services {
+		e.errGroup.Go(func() error {
+			return e.startRunnable(srv)
+		})
+	}
+	e.mutex.RUnlock()
 
-	for _, v := range e.services {
-		if !v.Attempt() {
-			//先判断是否可以启动
-			return errors.New("can't accept new runnable as stop procedure is already engaged")
-		}
-	}
-	//按顺序启动
-	for k := range e.services {
-		e.startRunnable(e.services[k])
-	}
-	e.waitForRunnable.Wait()
-	if err = e.errGroup.Wait(); err != nil {
-		e.errChan <- err
-	}
-	select {
-	case <-ctx.Done():
-		return nil
-	case err = <-e.errChan:
-		return err
-	}
-}
-
-func (e *Server) startRunnable(r Runnable) {
-	e.waitForRunnable.Add(1)
+	// 监听e.internalCtx.Done()，关闭所有Server
 	e.errGroup.Go(func() error {
-		defer e.waitForRunnable.Done()
-		if err := r.Start(e.internalCtx); err != nil {
-			e.errChan <- err
-			return err
-		}
-		return nil
+		return e.shutdownStopComplete()
 	})
-}
-
-func (e *Server) shutdownStopComplete(err error) error {
-	stopComplete := make(chan struct{})
-	defer close(stopComplete)
-	stopErr := e.engageStopProcedure(stopComplete)
-	if stopErr != nil {
-		if err != nil {
-			err = fmt.Errorf("%s, %w", stopErr.Error(), err)
-		} else {
-			err = stopErr
-		}
-	}
-	return err
-}
-
-func (e *Server) engageStopProcedure(stopComplete <-chan struct{}) error {
-	if e.opts.gracefulShutdownTimeout > 0 {
-		e.shutdownCtx, e.shutdownCancel = context.WithTimeout(context.Background(), e.opts.gracefulShutdownTimeout)
-	} else {
-		e.shutdownCtx, e.shutdownCancel = context.WithCancel(context.Background())
-	}
-	defer e.shutdownCancel()
-	close(e.internalProceduresStop)
-	e.internalCancel()
-
-	go func() {
-		for {
-			select {
-			case err, ok := <-e.errChan:
-				if ok {
-					e.logger.Error("error received after stop sequence was engaged", "error", err.Error())
-				}
-			case <-stopComplete:
-				return
-			}
-		}
-	}()
-
-	return e.waitForRunnableToEnd()
-}
-
-func (e *Server) waitForRunnableToEnd() error {
-	if e.opts.gracefulShutdownTimeout == 0 {
-		go func() {
-			e.waitForRunnable.Wait()
-			e.shutdownCancel()
-		}()
-	}
-	select {
-	case <-e.shutdownCtx.Done():
-		if err := e.shutdownCtx.Err(); err != nil && err != context.Canceled && err != context.DeadlineExceeded {
-			return fmt.Errorf(
-				"failed waiting for all runnables to end within grace period of %s: %w",
-				e.opts.gracefulShutdownTimeout, err)
-		}
+	//
+	if err = e.errGroup.Wait(); err != nil {
+		return err
 	}
 
 	return nil
 }
 
+func (e *Server) startRunnable(r Runnable) error {
+	//判断是否可以启动
+	if !r.Attempt() {
+		return fmt.Errorf("[%s] can't accept new runnable as stop procedure is already engaged", r.String())
+	}
+
+	if err := r.Start(e.internalCtx); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (e *Server) shutdownStopComplete() error {
+	<-e.internalCtx.Done() // 等待 context 被取消
+
+	fmt.Printf("waiting for all runnables to end within grace period of %.2f second\r\n", e.opts.gracefulShutdownTimeout.Seconds())
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), e.opts.gracefulShutdownTimeout)
+	defer cancel()
+	return e.engageStopProcedure(shutdownCtx)
+}
+
+// 启动停止程序
+func (e *Server) engageStopProcedure(ctx context.Context) error {
+	var wg sync.WaitGroup
+	for _, srv := range e.services {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if err := srv.Shutdown(ctx); err != nil {
+				fmt.Printf("[%s] server shutdown error: %s \r\n", srv.String(), err.Error())
+			}
+		}()
+	}
+	wg.Wait()
+
+	return nil
+}
+
 func (e *Server) Shutdown(ctx context.Context) (err error) {
-	return e.shutdownStopComplete(err)
+	e.errGroup.Go(func() error {
+		return fmt.Errorf("server shutdown")
+	})
+	return nil
 }

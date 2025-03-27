@@ -8,42 +8,24 @@ import (
 )
 
 type Logger struct {
-	handler contract.LoggerHandler                       // handler
-	filter  []func(lvl level.Level, keyVals ...any) bool // filter
-	fields  []any                                        // 运行时的公共字段（非初始化）
-	opts    LoggerOptions
+	handler contract.LoggerHandler // handler
+	fields  []any                  // 运行时的公共字段（非初始化）
+	filter  filterOptions          // filter
+	// filter  []func(lvl level.Level, keyVals ...any) bool // filter
+	opts LoggerOptions
 }
 
 func (t *Logger) init() {}
 
+func (t *Logger) applyOption(opts ...OptionFunc) {
+	for _, o := range opts {
+		o(t)
+	}
+}
+
 func (t *Logger) clone() *Logger {
 	c := *t
 	return &c
-}
-
-// checkFilter 校验字段过滤
-func (t *Logger) checkFilter(lvl level.Level, args ...any) []any {
-	for _, f := range t.filter {
-		if f != nil && f(lvl, args...) {
-			break
-			// return nil
-		}
-	}
-	return args
-}
-
-func (t *Logger) Log(level level.Level, msg string, args ...any) {
-	field := args
-
-	// 公共field
-	for _, v := range t.fields {
-		field = append(field, v)
-	}
-
-	// 字段过滤
-	data := t.checkFilter(level, field...)
-
-	t.handler.Log(level, msg, data...)
 }
 
 func (t *Logger) With(fields ...any) *Logger {
@@ -56,54 +38,59 @@ func (t *Logger) With(fields ...any) *Logger {
 	return c
 }
 
+func (t *Logger) Log(level level.Level, msg string, args ...any) {
+	t.log(level, msg, args...)
+}
+
 // trace
-// func (t *Logger) Trace(msg string, args ...any) {
-// 	t.Log(level.TraceLevel, msg, args...)
-// }
+func (t *Logger) Trace(msg string, args ...any) {
+	t.log(level.TraceLevel, msg, args...)
+}
 
 // debug
 func (t *Logger) Debug(msg string, args ...any) {
-	t.Log(level.DebugLevel, msg, args...)
+	t.log(level.DebugLevel, msg, args...)
 }
 
 // info
 func (t *Logger) Info(msg string, args ...any) {
-	t.Log(level.InfoLevel, msg, args...)
+	t.log(level.InfoLevel, msg, args...)
 }
 
 // warn
 func (t *Logger) Warn(msg string, args ...any) {
-	t.Log(level.WarnLevel, msg, args...)
+	t.log(level.WarnLevel, msg, args...)
 }
 
 func (t *Logger) Error(msg string, args ...any) {
-	t.Log(level.ErrorLevel, msg, args...)
+	t.log(level.ErrorLevel, msg, args...)
 }
 
 func (t *Logger) Fatal(msg string, args ...any) {
-	t.Log(level.FatalLevel, msg, args...)
+	t.log(level.FatalLevel, msg, args...)
 	os.Exit(1)
 }
 
-func (t *Logger) Store(name string) contract.LoggerHandler {
-	if v, ok := t.opts.drivers.Load(name); ok {
-		if h, ok := v.(contract.LoggerHandler); ok {
-			return h
-		}
-		return nil
-	}
+func (t *Logger) log(level level.Level, msg string, args ...any) {
+	field := t.fields
+	field = append(field, args...)
 
-	return nil
+	// 字段过滤
+	data := t.checkFilter(level, field...)
+
+	t.handler.Log(level, msg, data...)
 }
 
 func NewLogger(log contract.LoggerHandler, opts ...OptionFunc) *Logger {
-	l := &Logger{
-		handler: log,
+	if log == nil {
+		panic("nil loggerHandler")
 	}
 
-	for _, o := range opts {
-		o(l)
+	l := &Logger{
+		handler: log,
+		opts:    setDefaultOptions(),
 	}
+	l.applyOption(opts...)
 
 	l.init()
 	return l

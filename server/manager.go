@@ -17,4 +17,5 @@ type Runnable interface {
 	Start(ctx context.Context) error
 	// Attempt 是否允许启动
 	Attempt() bool
+	Shutdown(ctx context.Context) error
 }
