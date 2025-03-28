@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/cpyun/gyopls-core/contract"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -35,7 +36,7 @@ func (r *redisApt) parseRedisConfig() *redis.Options {
 	return val
 }
 
-func (r *redisApt) close() error {
+func (r *redisApt) Close() error {
 	return r.handler.Close()
 }
 
@@ -56,7 +57,7 @@ func (r *redisApt) Get(key string) (any, error) {
 // Set value with key and expire time
 func (r *redisApt) Set(key string, val any, expire time.Duration) error {
 	key = r.getCacheKey(key)
-	return r.handler.Set(r.ctx, key, val, time.Duration(expire)*time.Second).Err()
+	return r.handler.Set(r.ctx, key, val, expire).Err()
 }
 
 // Del delete key in redis
@@ -66,26 +67,31 @@ func (r *redisApt) Delete(key string) error {
 }
 
 // HashGet from key
-func (r *redisApt) HashGet(hk, key string) (any, error) {
+func (r *redisApt) HashGet(key, filed string) (any, error) {
 	key = r.getCacheKey(key)
-	return r.handler.HGet(r.ctx, hk, key).Result()
+	return r.handler.HGet(r.ctx, key, filed).Result()
+}
+
+func (r *redisApt) HashSet(key string, values ...any) (any, error) {
+	key = r.getCacheKey(key)
+	return r.handler.HSet(r.ctx, key, values...).Result()
 }
 
 // HashDel delete key in specify redis's hashtable
-func (r *redisApt) HashDelete(hk, key string) error {
+func (r *redisApt) HashDelete(key string, fileds ...string) error {
 	key = r.getCacheKey(key)
-	return r.handler.HDel(r.ctx, hk, key).Err()
+	return r.handler.HDel(r.ctx, key, fileds...).Err()
 }
 
 // Increase value
-func (r *redisApt) Increase(key string, step int) error {
+func (r *redisApt) Increase(key string, step int64) error {
 	key = r.getCacheKey(key)
-	return r.handler.Incr(r.ctx, key).Err()
+	return r.handler.IncrBy(r.ctx, key, step).Err()
 }
 
-func (r *redisApt) Decrease(key string, step int) error {
+func (r *redisApt) Decrease(key string, step int64) error {
 	key = r.getCacheKey(key)
-	return r.handler.Decr(r.ctx, key).Err()
+	return r.handler.DecrBy(r.ctx, key, step).Err()
 }
 
 // Expire Set ttl
@@ -99,13 +105,12 @@ func (r *redisApt) Handler() any {
 }
 
 // NewRedis redis模式
-func NewRedis(opts ...OptionFunc) *redisApt {
+func NewRedis(opts ...OptionFunc) contract.CacheHandlerInterface {
 	r := &redisApt{
 		ctx: context.Background(),
 	}
-
 	r.withOptions(opts...)
-	r.init()
 
+	r.init()
 	return r
 }

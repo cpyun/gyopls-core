@@ -11,7 +11,7 @@ type CacheAdapter struct {
 	opts    cacheAdapterOptions
 }
 
-func (t *CacheAdapter) withOptions(opts ...OptionFunc) {
+func (t *CacheAdapter) applyOptions(opts ...OptionFunc) {
 	for _, opt := range opts {
 		opt(t)
 	}
@@ -33,9 +33,16 @@ func (t *CacheAdapter) Delete(name string) error {
 	return t.handler.Delete(t.getCacheKey(name))
 }
 
-// 连接或者切换缓存
-func (t *CacheAdapter) Store(name string) contract.CacheHandlerInterface {
-	return t.handler
+func (t *CacheAdapter) Increase(key string, step int64) error {
+	return t.handler.Increase(t.getCacheKey(key), step)
+}
+
+func (t *CacheAdapter) Decrease(key string, step int64) error {
+	return t.handler.Decrease(t.getCacheKey(key), step)
+}
+
+func (t *CacheAdapter) Expire(key string, dur time.Duration) error {
+	return t.handler.Expire(t.getCacheKey(key), dur)
 }
 
 func NewCache(handler contract.CacheHandlerInterface, opts ...OptionFunc) *CacheAdapter {
@@ -44,6 +51,6 @@ func NewCache(handler contract.CacheHandlerInterface, opts ...OptionFunc) *Cache
 		opts:    setDefaultOptions(),
 	}
 
-	t.withOptions(opts...)
+	t.applyOptions(opts...)
 	return t
 }
