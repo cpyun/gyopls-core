@@ -68,7 +68,7 @@ func TestCache_Decrease(t *testing.T) {
 	cache := NewCache(handler)
 	cache.Set(key, 1, ttl)
 
-	cache.Decrease(key, -1)
+	cache.Decrease(key, 1)
 	if val, err := cache.Get(key); err != nil || val.(int64) != 0 {
 		t.Errorf("Expected %d, got %v", val, err)
 	}

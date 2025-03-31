@@ -2,7 +2,6 @@ package memory
 
 import (
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/cpyun/gyopls-core/contract"
@@ -16,7 +15,6 @@ type item struct {
 
 type memory struct {
 	items map[string]*item
-	mutex sync.RWMutex
 	opt   memoryOptions
 }
 
@@ -24,8 +22,14 @@ func (*memory) String() string {
 	return "memory"
 }
 
-func (r *memory) getCacheKey(key string) string {
-	return r.opt.prefix + key
+func (m *memory) applyOptions(opts ...optionFunc) {
+	for _, o := range opts {
+		o(&m.opt)
+	}
+}
+
+func (m *memory) getCacheKey(key string) string {
+	return m.opt.prefix + key
 }
 
 func (m *memory) setItem(key string, item *item) error {
@@ -53,8 +57,6 @@ func (m *memory) getItem(key string) (*item, error) {
 
 func (m *memory) Set(key string, val any, expire time.Duration) error {
 	key = m.getCacheKey(key)
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
 
 	item := &item{
 		Value:   val,
@@ -65,8 +67,6 @@ func (m *memory) Set(key string, val any, expire time.Duration) error {
 
 func (m *memory) Get(key string) (any, error) {
 	key = m.getCacheKey(key)
-	m.mutex.RLock()
-	defer m.mutex.RUnlock()
 
 	item, err := m.getItem(key)
 	if err != nil || item == nil {
@@ -94,13 +94,10 @@ func (m *memory) Increase(key string, step int64) error {
 
 func (m *memory) Decrease(key string, step int64) error {
 	key = m.getCacheKey(key)
-	return m.calculate(key, step)
+	return m.calculate(key, -step)
 }
 
 func (m *memory) calculate(key string, num int64) error {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-
 	item, err := m.getItem(key)
 	if err != nil {
 		return err
@@ -129,10 +126,6 @@ func (m *memory) Expire(key string, dur time.Duration) error {
 		return fmt.Errorf("%s not exist", key)
 	}
 
-	// 修改操作
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-
 	item.Expired = time.Now().Add(dur)
 	return nil
 }
@@ -142,9 +135,12 @@ func (m *memory) Handler() any {
 }
 
 // NewMemory memory模式
-func NewMemory() contract.CacheHandlerInterface {
-	return &memory{
+func NewMemory(opts ...optionFunc) contract.CacheHandlerInterface {
+	m := &memory{
 		items: make(map[string]*item),
 		opt:   setDefaultOption(),
 	}
+	m.applyOptions(opts...)
+
+	return m
 }
