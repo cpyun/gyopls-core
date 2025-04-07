@@ -34,12 +34,12 @@ func (e *Server) applyOptions(opts ...OptionFunc) {
 
 // Add 添加 runnable
 func (e *Server) Add(r ...Runnable) {
+	e.mutex.Lock()
+	defer e.mutex.Unlock()
+
 	if e.services == nil {
 		e.services = make(map[string]Runnable)
 	}
-
-	e.mutex.Lock()
-	defer e.mutex.Unlock()
 
 	for _, v := range r {
 		e.services[v.String()] = v

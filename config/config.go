@@ -28,10 +28,8 @@ func (t *config) Scan(v any) error {
 // }
 
 // func (t *config) Watch(f func()) error {
-// 	t.handler.OnConfigChange(func(in fsnotify.Event) {
-
-// 	})
 // 	t.handler.WatchConfig()
+// 	t.handler.OnConfigChange(f)
 // 	return nil
 // }
 

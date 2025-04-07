@@ -9,27 +9,26 @@ import (
 
 type DBManager struct {
 	instance sync.Map         // *gorm.DB
-	mux      sync.RWMutex     //
+	lock     sync.RWMutex     //
 	opts     dbManagerOptions //
 }
 
 func (t *DBManager) init() {}
 
-func (t *DBManager) withOptionFunc(opts ...optionFunc) {
+func (t *DBManager) applyOption(opts ...optionFunc) {
 	for _, v := range opts {
 		v(t)
 	}
 }
 
 func (t *DBManager) getDialector(name string) func(string) gorm.Dialector {
-	if val, ok := t.opts.dialector.Load(name); ok {
-		return val.(func(string) gorm.Dialector)
+	if val, ok := t.opts.dialector[name]; ok {
+		return val
 	}
 	return nil
 }
 
-// connect 创建数据库连接查询.
-func (t *DBManager) Connect(name string, conn *db.Connection) *DBManager {
+func (t *DBManager) createConnect(conn *db.Connection) *gorm.DB {
 	dialector := t.getDialector(conn.GetDriverName())
 	c := conn.Connect(dialector)
 	// 设置日志
@@ -37,7 +36,13 @@ func (t *DBManager) Connect(name string, conn *db.Connection) *DBManager {
 		c.Session(&gorm.Session{Logger: t.opts.logger})
 	}
 
-	t.instance.Store(name, c)
+	return c
+}
+
+// connect 创建数据库连接查询.
+func (t *DBManager) Connect(key string, conn *db.Connection) *DBManager {
+	db := t.createConnect(conn)
+	t.instance.Store(key, db)
 	return t
 }
 
@@ -56,7 +61,7 @@ func NewDBManager(opts ...optionFunc) *DBManager {
 		opts: setDefaultDbManagerOptions(),
 	}
 	//
-	m.withOptionFunc(opts...)
+	m.applyOption(opts...)
 
 	m.init()
 	return m
