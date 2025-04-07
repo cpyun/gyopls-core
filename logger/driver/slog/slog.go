@@ -2,6 +2,7 @@ package slog
 
 import (
 	"context"
+	"io"
 	"log/slog"
 
 	"github.com/cpyun/gyopls-core/contract"
@@ -9,8 +10,32 @@ import (
 )
 
 type slogApt struct {
-	ctx    context.Context
-	hanler *slog.Logger
+	ctx     context.Context
+	handler *slog.Logger
+	opts    slogOption
+}
+
+func (t *slogApt) init() {
+	handler := slog.NewJSONHandler(t.getIoWriter(), t.getHandlerConfig())
+
+	t.handler = slog.New(handler)
+}
+
+func (t *slogApt) applyOptions(opts ...optionFunc) {
+	for _, opt := range opts {
+		opt(&t.opts)
+	}
+}
+
+func (t *slogApt) getIoWriter() io.Writer {
+	return io.MultiWriter(t.opts.output...)
+}
+
+func (t *slogApt) getHandlerConfig() *slog.HandlerOptions {
+	return &slog.HandlerOptions{
+		AddSource: true,
+		Level:     t.opts.level,
+	}
 }
 
 func (t *slogApt) clone() *slogApt {
@@ -24,7 +49,7 @@ func (t *slogApt) With(args ...any) contract.LoggerHandler {
 	}
 
 	c := t.clone()
-	c.hanler = c.hanler.With(args...)
+	c.handler = c.handler.With(args...)
 
 	return c
 }
@@ -32,17 +57,21 @@ func (t *slogApt) With(args ...any) contract.LoggerHandler {
 func (t *slogApt) Log(level level.Level, msg string, args ...any) {
 	lvl := levlToSlogLeve(level)
 
-	t.hanler.Log(t.ctx, lvl, msg, args...)
+	t.handler.Log(t.ctx, lvl, msg, args...)
 }
 
 func (t *slogApt) String() string {
 	return "slog"
 }
 
-func New() contract.LoggerHandler {
-	return &slogApt{
-		hanler: slog.Default(),
+func New(opts ...optionFunc) contract.LoggerHandler {
+	sl := &slogApt{
+		opts: setDefaultOptions(),
 	}
+	sl.applyOptions(opts...)
+
+	sl.init()
+	return sl
 }
 
 func levlToSlogLeve(lvl level.Level) slog.Level {
