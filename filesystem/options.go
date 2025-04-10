@@ -6,18 +6,18 @@ import (
 	"github.com/spf13/afero"
 )
 
-type filesystemAdapterOptions struct {
+type fsOptions struct {
 	drivers sync.Map
 }
 
-type OptionFunc func(*FilesystemAdapter)
+type OptionFunc func(*FsManager)
 
-func setDefaultOptions() filesystemAdapterOptions {
-	return filesystemAdapterOptions{}
+func setDefaultOptions() fsOptions {
+	return fsOptions{}
 }
 
-func WithDriversOpts(name string, fs afero.Fs) OptionFunc {
-	return func(o *FilesystemAdapter) {
+func WithDriver(name string, fs afero.Fs) OptionFunc {
+	return func(o *FsManager) {
 		o.opts.drivers.Store(name, fs)
 	}
 }
