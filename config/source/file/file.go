@@ -10,20 +10,30 @@ import (
 )
 
 type file struct {
-	path string
-	opts source.Options
+	viper *viper.Viper
+	opts  fileOptions
+}
+
+func (f *file) applyOption(opts ...optionFn) {
+	for _, o := range opts {
+		o(&f.opts)
+	}
+}
+
+func (f *file) init() {
+	if f.opts.file != "" {
+		f.viper.SetConfigFile(f.opts.file)
+	}
 }
 
 func (f *file) Read() (*source.ChangeSet, error) {
-	viper.SetConfigFile(f.path)
-
-	err := viper.ReadInConfig()
+	err := f.viper.ReadInConfig()
 	if err != nil || errors.As(err, &viper.ConfigFileNotFoundError{}) {
 		return nil, err
 	}
 
 	cs := &source.ChangeSet{
-		Format:    filepath.Ext(f.path),
+		Format:    filepath.Ext(f.opts.file),
 		Source:    f.String(),
 		Timestamp: time.Now(),
 		Data:      []byte("viper"),
@@ -45,16 +55,13 @@ func (f *file) String() string {
 	return "file"
 }
 
-func NewSourceFile(opts ...source.Option) source.Source {
-	options := source.NewOptions(opts...)
-	path := "./config/"
-
-	if fk, ok := options.Context.Value(filePathKey{}).(string); ok {
-		path = fk
+func New(opts ...optionFn) source.Source {
+	f := &file{
+		viper: viper.GetViper(),
+		opts:  setDefaultOptions(),
 	}
+	f.applyOption(opts...)
 
-	return &file{
-		path: path,
-		opts: options,
-	}
+	f.init()
+	return f
 }

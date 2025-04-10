@@ -2,7 +2,6 @@ package flag
 
 import (
 	"encoding/json"
-	"errors"
 	"time"
 
 	"github.com/cpyun/gyopls-core/config/source"
@@ -11,22 +10,24 @@ import (
 )
 
 type flag struct {
-	opts source.Options
+	viper *viper.Viper
+	sets  *pflag.FlagSet
+}
+
+func (f *flag) init() {
+	f.viper = viper.GetViper()
+
+	if f.sets != nil {
+		f.viper.BindPFlags(f.sets)
+	}
 }
 
 func (f *flag) Read() (*source.ChangeSet, error) {
-	sets, ok := f.opts.Context.Value(flagSets{}).(*pflag.FlagSet)
-	if !ok {
-		return nil, errors.New("flag sets not found")
-	}
-
-	err := viper.BindPFlags(sets)
-
 	var changes map[string]any
-	sets.VisitAll(func(flag *pflag.Flag) {
+	f.sets.VisitAll(func(flag *pflag.Flag) {
 		changes[flag.Name] = flag.Value.String()
 	})
-	b, _ := json.Marshal(changes)
+	b, err := json.Marshal(changes)
 
 	cs := &source.ChangeSet{
 		Format:    "json",
@@ -47,8 +48,9 @@ func (f *flag) String() string {
 	return "flag"
 }
 
-func NewSourceFlag(opts ...source.Option) source.Source {
-	return &flag{
-		opts: source.NewOptions(opts...),
-	}
+func New(opts ...source.Option) source.Source {
+	f := &flag{}
+
+	f.init()
+	return f
 }

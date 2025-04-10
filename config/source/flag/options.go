@@ -1,20 +1,15 @@
 package flag
 
 import (
-	"context"
-
 	"github.com/spf13/pflag"
-
-	"github.com/cpyun/gyopls-core/config/source"
 )
 
-type flagSets struct{}
+type optionFn func(*flag)
 
-func WithFlagSets(set *pflag.FlagSet) source.Option {
-	return source.OptionFunc(func(o *source.Options) {
-		if o.Context == nil {
-			o.Context = context.Background()
+func WithFlagSets(set *pflag.FlagSet) optionFn {
+	return func(f *flag) {
+		if f.sets == nil {
+			f.sets = set
 		}
-		o.Context = context.WithValue(o.Context, flagSets{}, set)
-	})
+	}
 }
