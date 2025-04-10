@@ -8,9 +8,9 @@ import (
 )
 
 type DBManager struct {
-	instance sync.Map         // *gorm.DB
-	lock     sync.RWMutex     //
-	opts     dbManagerOptions //
+	instance map[string]*gorm.DB // *gorm.DB
+	lock     sync.RWMutex        //
+	opts     dbManagerOptions    //
 }
 
 func (t *DBManager) init() {}
@@ -41,18 +41,23 @@ func (t *DBManager) createConnect(conn *db.Connection) *gorm.DB {
 
 // connect 创建数据库连接查询.
 func (t *DBManager) Connect(key string, conn *db.Connection) *DBManager {
-	db := t.createConnect(conn)
-	t.instance.Store(key, db)
+	connect := t.createConnect(conn)
+
+	t.lock.Lock()
+	t.instance[key] = connect
+	t.lock.Unlock()
+
 	return t
 }
 
 // store 切换数据库连接查询.
 func (t *DBManager) Store(name string) *gorm.DB {
-	// log.Debug("Database at [%s] => %s", name, pkg.Green(c.Source))
-	if val, ok := t.instance.Load(name); ok {
-		return val.(*gorm.DB)
-	}
+	t.lock.RLock()
+	defer t.lock.RUnlock()
 
+	if val, ok := t.instance[name]; ok {
+		return val
+	}
 	return nil
 }
 
