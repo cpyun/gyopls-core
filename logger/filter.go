@@ -1,24 +1,12 @@
 package logger
 
-import (
-	"github.com/cpyun/gyopls-core/logger/level"
-)
-
 const fuzzyStr = "***"
 
 // filterOptionFunc is filter option.
 type filterOptionFunc func(*Logger)
 
 type filterOptions struct {
-	level level.Level
 	attrs []func(keyVals ...any) bool
-}
-
-// FilterWithLevel with filter level.
-func FilterWithLevel(lvl level.Level) filterOptionFunc {
-	return func(o *Logger) {
-		o.filter.level = lvl
-	}
 }
 
 // FilterWithKey with filter key.
@@ -29,10 +17,6 @@ func FilterWithKey(key ...string) filterOptionFunc {
 			keyMap[v] = true
 		}
 		for i := 0; i < len(keyVals); {
-			if i == len(keyVals)-1 || i+1 >= len(keyVals) {
-				return false
-			}
-
 			key, okKey := keyVals[i].(string)
 			if !okKey {
 				i++
@@ -61,7 +45,7 @@ func FilterWithValue(values ...string) filterOptionFunc {
 			keyMap[v] = true
 		}
 		for i := 0; i < len(keyVals); {
-			if i == len(keyVals)-1 || i+1 >= len(keyVals) {
+			if i+1 >= len(keyVals) {
 				return false
 			}
 
@@ -73,7 +57,7 @@ func FilterWithValue(values ...string) filterOptionFunc {
 			// 判断value是否为string类型
 			val, okVal := keyVals[i+1].(string)
 			if !okVal {
-				i++
+				i += 2
 				continue
 			}
 
@@ -96,20 +80,7 @@ func FilterWithFunc(f func(keyvals ...any) bool) filterOptionFunc {
 }
 
 // checkFilter 校验过滤
-func (t *Logger) checkFilter(lvl level.Level, args ...any) []any {
-	if t.checkFilterLevel(lvl) {
-		return nil
-	}
-
-	attrs := t.checkFilterAttrs(args...)
-	return attrs
-}
-
-func (t *Logger) checkFilterLevel(lvl level.Level) bool {
-	return t.opts.level > lvl
-}
-
-func (t *Logger) checkFilterAttrs(args ...any) []any {
+func (t *Logger) checkFilter(args ...any) []any {
 	for _, f := range t.filter.attrs {
 		if f != nil && !f(args...) {
 			break

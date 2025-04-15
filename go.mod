@@ -8,7 +8,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/json-iterator/go v1.1.12
-	github.com/redis/go-redis/v9 v9.0.3
+	github.com/redis/go-redis/v9 v9.7.3
 	github.com/smartystreets/goconvey v1.7.2
 	github.com/spf13/afero v1.12.0
 	github.com/spf13/cast v1.7.1

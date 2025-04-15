@@ -1,7 +1,6 @@
 package env
 
 import (
-	"strings"
 	"time"
 
 	"github.com/cpyun/gyopls-core/config/source"
@@ -9,22 +8,31 @@ import (
 )
 
 type env struct {
-	prefixes         []string
-	strippedPrefixes []string
-	replacer         *strings.Replacer
-	opts             source.Options
+	viper *viper.Viper
+	opts  envOptions
+}
+
+func (e *env) applyOption(opts ...optionFn) {
+	for _, o := range opts {
+		o(&e.opts)
+	}
+}
+
+func (e *env) init() {
+	// 设置前缀
+	if e.opts.prefix != "" {
+		e.viper.SetEnvPrefix(e.opts.prefix)
+	}
+
+	// 使用替代符替换
+	if e.opts.replacer != nil {
+		e.viper.SetEnvKeyReplacer(e.opts.replacer)
+	}
 }
 
 func (e *env) Read() (*source.ChangeSet, error) {
-	// 按照前缀读取环境变量
-	if len(e.prefixes) > 0 {
-		viper.SetEnvPrefix(e.prefixes[0])
-	}
-	// 使用替代符替换
-	viper.SetEnvKeyReplacer(e.replacer)
-
 	// 自动加载环境变量
-	viper.AutomaticEnv()
+	e.viper.AutomaticEnv()
 
 	cs := &source.ChangeSet{
 		Format:    "json",
@@ -45,22 +53,13 @@ func (e *env) String() string {
 	return "env"
 }
 
-func NewSourceEnv(opts ...source.Option) source.Source {
-	options := source.NewOptions(opts...)
-	replacer := strings.NewReplacer(".", "_")
-
-	var pre []string
-	if p, ok := options.Context.Value(prefixKey{}).([]string); ok {
-		pre = p
+func New(opts ...optionFn) source.Source {
+	e := &env{
+		viper: viper.GetViper(),
+		opts:  setDefaultOption(),
 	}
+	e.applyOption(opts...)
 
-	if r, ok := options.Context.Value(replaceKey{}).(*strings.Replacer); ok {
-		replacer = r
-	}
-
-	return &env{
-		prefixes: pre,
-		replacer: replacer,
-		opts:     options,
-	}
+	e.init()
+	return e
 }

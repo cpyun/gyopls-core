@@ -72,13 +72,20 @@ func (t *Logger) Fatal(msg string, args ...any) {
 }
 
 func (t *Logger) log(level level.Level, msg string, args ...any) {
-	field := t.fields
-	field = append(field, args...)
+	if !t.opts.level.Enabled(level) {
+		return
+	}
 
 	// 字段过滤
-	data := t.checkFilter(level, field...)
+	args = t.checkFilter(args...)
 
-	t.handler.Log(level, msg, data...)
+	//
+	h := t.handler
+	if len(t.fields) > 0 {
+		h = h.With(t.fields...)
+	}
+
+	h.Log(level, msg, args...)
 }
 
 func NewLogger(log contract.LoggerHandler, opts ...OptionFunc) *Logger {

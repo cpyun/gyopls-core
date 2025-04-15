@@ -13,7 +13,6 @@ import (
 var (
 	once      sync.Once
 	defaultDB *database.DBManager
-	DB        *gorm.DB
 )
 
 func init() {
@@ -28,9 +27,6 @@ func init() {
 				db.WithConnectConfig(*v),
 			))
 		}
-
-		// 默认mysql
-		DB = defaultDB.Store("mysql")
 	})
 }
 
@@ -38,14 +34,6 @@ func Store(name string) *gorm.DB {
 	return defaultDB.Store(name)
 }
 
-func Model(name any) *gorm.DB {
-	return DB.Model(name)
+func DB() *gorm.DB {
+	return Store("mysql")
 }
-
-func Tables(name string, args ...any) *gorm.DB {
-	return DB.Table(name, args...)
-}
-
-// func GetDB() *gorm.DB {
-// 	return DB
-// }

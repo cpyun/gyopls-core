@@ -8,20 +8,27 @@ import (
 )
 
 type remote struct {
-	opts source.Options
+	viper     *viper.Viper
+	providers []remoteProvider
+}
+
+func (r *remote) applyOptions(opts ...optionFn) {
+
+}
+
+func (r *remote) init() {
+	r.viper = viper.GetViper()
+	r.viper.SetConfigType("properties")
+
+	if len(r.providers) > 0 {
+		for _, p := range r.providers {
+			_ = r.viper.AddRemoteProvider(p.name, p.endpoint, p.path)
+		}
+	}
 }
 
 func (r *remote) Read() (*source.ChangeSet, error) {
-	v := viper.GetViper()
-	v.SetConfigType("properties")
-
-	provider := r.opts.Context.Value(remoteProvider{}).(remoteProvider)
-	err := v.AddRemoteProvider(provider.name, provider.endpoint, provider.path)
-	if err != nil {
-		return nil, err
-	}
-
-	err = v.ReadRemoteConfig()
+	err := r.viper.ReadRemoteConfig()
 
 	cs := &source.ChangeSet{
 		Format:    "json",
@@ -43,10 +50,10 @@ func (r *remote) String() string {
 	return "remote"
 }
 
-func NewSourceRemote(opts ...source.Option) source.Source {
-	options := source.NewOptions(opts...)
+func New(opts ...optionFn) source.Source {
+	r := &remote{}
+	r.applyOptions(opts...)
 
-	return &remote{
-		opts: options,
-	}
+	r.init()
+	return r
 }

@@ -18,7 +18,7 @@ func setDefaultOption() configOptions {
 	}
 }
 
-func WithSourceOpts(s ...source.Source) OptionFunc {
+func WithSources(s ...source.Source) OptionFunc {
 	return func(t *configOptions) {
 		t.sources = append(t.sources, s...)
 	}

@@ -3,7 +3,6 @@ package zap
 import (
 	"os"
 
-	"github.com/cpyun/gyopls-core/logger/level"
 	"github.com/cpyun/gyopls-core/logger/output"
 	"go.uber.org/zap/zapcore"
 )
@@ -22,22 +21,16 @@ type OptionFunc func(o *zapOption)
 func setDefaultOptions() zapOption {
 	return zapOption{
 		mode:          "production",
-		level:         zapcore.InfoLevel,
+		level:         zapcore.DebugLevel,
 		callerSkipKey: 3,
 		timeFormat:    "2006-01-02T15:04:05.000Z07:00",
-		output:        []zapcore.WriteSyncer{zapcore.Lock(os.Stderr)},
+		output:        []zapcore.WriteSyncer{zapcore.Lock(os.Stdout)},
 	}
 }
 
 func WithModel(name string) OptionFunc {
 	return func(o *zapOption) {
 		o.mode = name
-	}
-}
-
-func WithLevel(lvl level.Level) OptionFunc {
-	return func(o *zapOption) {
-		o.level = loggerLevelToZapLevel(lvl)
 	}
 }
 
@@ -65,6 +58,7 @@ func WithOutput(output ...output.Output) OptionFunc {
 			return
 		}
 
+		o.output = o.output[:0]
 		for _, out := range output {
 			o.output = append(o.output, zapcore.AddSync(out))
 		}

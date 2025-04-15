@@ -1,12 +1,20 @@
 package redis
 
+import "context"
+
+type OptionFunc func(opts *redisApt)
+
 type RedisOptions struct {
-	// config.Redis
+	ctx    context.Context
 	Dsn    string
 	Prefix string
 }
 
-type OptionFunc func(opts *redisApt)
+func setDefaultOptions() RedisOptions {
+	return RedisOptions{
+		ctx: context.Background(),
+	}
+}
 
 func WithDSN(dsn string) OptionFunc {
 	return func(o *redisApt) {

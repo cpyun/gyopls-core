@@ -1,8 +1,7 @@
 package database
 
 import (
-	"sync"
-
+	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -10,17 +9,22 @@ import (
 type optionFunc func(*DBManager)
 
 type dbManagerOptions struct {
-	dialector sync.Map
+	dialector map[string]func(string) gorm.Dialector
 	logger    logger.Interface
 }
 
 func setDefaultDbManagerOptions() dbManagerOptions {
-	return dbManagerOptions{}
+	var dialector = make(map[string]func(string) gorm.Dialector)
+	dialector["mysql"] = mysql.Open
+
+	return dbManagerOptions{
+		dialector: dialector,
+	}
 }
 
 func WithConectorOpts(name string, open func(string) gorm.Dialector) optionFunc {
 	return func(dm *DBManager) {
-		dm.opts.dialector.Store(name, open)
+		dm.opts.dialector[name] = open
 	}
 }
 

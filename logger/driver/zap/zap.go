@@ -1,8 +1,6 @@
 package zap
 
 import (
-	"fmt"
-
 	"github.com/cpyun/gyopls-core/contract"
 	"github.com/cpyun/gyopls-core/logger/level"
 	"go.uber.org/zap"
@@ -30,7 +28,7 @@ func (l *zapLog) init() {
 	log := zap.New(zapCore,
 		zap.AddCaller(),
 		zap.AddCallerSkip(l.opts.callerSkipKey),
-		zap.AddStacktrace(zap.DPanicLevel),
+		zap.AddStacktrace(zap.ErrorLevel),
 		zap.Fields(fields...),
 	)
 
@@ -53,9 +51,6 @@ func (l *zapLog) getZapEncoder() zapcore.Encoder {
 
 func (l *zapLog) getZapConfig() zap.Config {
 	var zapConfig zap.Config
-	// if zConfig, ok := l.opts.Context.Value(configKey{}).(zap.Config); ok {
-	// 	zapConfig = zConfig
-	// }
 	//mode
 	switch l.opts.mode {
 	case "debug":
@@ -75,53 +70,7 @@ func (l *zapLog) getZapConfig() zap.Config {
 	return zapConfig
 }
 
-// 解析fields
-func (l *zapLog) parseZapFields(args ...any) []zap.Field {
-	if len(args) == 0 {
-		return nil
-	}
-
-	var (
-		zapField = make([]zap.Field, len(args))
-	)
-
-	for i := 0; i < len(args); {
-		// This is a strongly-typed field. Consume it and move on.
-		if f, ok := args[i].(zap.Field); ok {
-			zapField = append(zapField, f)
-			i++
-			continue
-		}
-
-		// If it is an error, consume it and move on.
-		if err, ok := args[i].(error); ok {
-			zapField = append(zapField, zap.Error(err))
-			i++
-			continue
-		}
-
-		// Make sure this element isn't a dangling key.
-		if i == len(args)-1 {
-			zapField = append(zapField, zap.Any("ignored", args[i]))
-			break
-		}
-
-		// Consume this value and the next, treating them as a key-value pair. If the
-		// key isn't a string, add this pair to the slice of invalid pairs.
-		key, val := args[i], args[i+1]
-		if keyStr, ok := key.(string); !ok {
-			zapField = append(zapField, zap.Error(fmt.Errorf("key %v is not type string", key)))
-		} else {
-			zapField = append(zapField, zap.Any(keyStr, val))
-		}
-		i += 2
-	}
-
-	return zapField
-}
-
 func (l *zapLog) With(fields ...any) contract.LoggerHandler {
-	// zapField := l.parseZapFields(fields...)
 	newHandler := l.handler.With(fields...)
 	//
 	return &zapLog{
@@ -163,6 +112,8 @@ func zaplevelToLoggerLevel(l zapcore.Level) level.Level {
 	case zapcore.WarnLevel:
 		return level.WarnLevel
 	case zapcore.ErrorLevel:
+		return level.ErrorLevel
+	case zapcore.DPanicLevel, zapcore.PanicLevel:
 		return level.ErrorLevel
 	case zapcore.FatalLevel:
 		return level.FatalLevel

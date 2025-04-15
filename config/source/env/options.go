@@ -1,56 +1,35 @@
 package env
 
 import (
-	"context"
 	"strings"
 
 	"github.com/cpyun/gyopls-core/config/source"
 )
 
-type strippedPrefixKey struct{}
-type prefixKey struct{}
-type replaceKey struct{}
+type optionFn func(*envOptions)
 
-func WithStrippedPrefix(p ...string) source.Option {
-	return source.OptionFunc(func(o *source.Options) {
-		if o.Context == nil {
-			o.Context = context.Background()
-		}
-		o.Context = context.WithValue(o.Context, strippedPrefixKey{}, appendUnderscore(p))
-	})
+type envOptions struct {
+	source.Option
+	prefix   string
+	replacer *strings.Replacer
 }
 
-func WithPrefix(p ...string) source.Option {
-	return source.OptionFunc(func(o *source.Options) {
-		if o.Context == nil {
-			o.Context = context.Background()
-		}
-		o.Context = context.WithValue(o.Context, prefixKey{}, p)
-	})
-}
-
-func WithReplace(oldNew ...string) source.Option {
-	return source.OptionFunc(func(o *source.Options) {
-		if o.Context == nil {
-			o.Context = context.Background()
-		}
-
-		replace := strings.NewReplacer(oldNew...)
-		o.Context = context.WithValue(o.Context, replaceKey{}, replace)
-	})
-}
-
-func appendUnderscore(prefixes []string) []string {
-	//nolint:prealloc
-	var result []string
-	for _, p := range prefixes {
-		if !strings.HasSuffix(p, "_") {
-			result = append(result, p+"_")
-			continue
-		}
-
-		result = append(result, p)
+func setDefaultOption() envOptions {
+	return envOptions{
+		replacer: strings.NewReplacer(".", "_"),
 	}
+}
 
-	return result
+// WithPrefix sets the prefix for the environment variable.
+func WithPrefix(p string) optionFn {
+	return func(o *envOptions) {
+		o.prefix = p
+	}
+}
+
+// WithReplace sets the replacer for the environment variable.
+func WithReplace(oldNew ...string) optionFn {
+	return func(o *envOptions) {
+		o.replacer = strings.NewReplacer(oldNew...)
+	}
 }
