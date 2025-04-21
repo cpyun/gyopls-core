@@ -30,12 +30,12 @@ func (t *Connection) Connect(dialector func(string) gorm.Dialector) *gorm.DB {
 func (t *Connection) createConnect(dialector gorm.Dialector, config *gorm.Config) *gorm.DB {
 	db, err := gorm.Open(dialector, config)
 	if err != nil {
-		return nil
+		panic(err)
 	}
 	//
 	sqlDB, err := db.DB()
 	if err != nil {
-		return nil
+		panic(err)
 	}
 
 	register := dbresolver.Register(dbresolver.Config{})
@@ -90,7 +90,9 @@ func (t *Connection) withOptionFunc(opts ...OptionFunc) {
 }
 
 func NewConnection(opts ...OptionFunc) *Connection {
-	c := &Connection{}
+	c := &Connection{
+		opts: setDefaultOptions(),
+	}
 	c.withOptionFunc(opts...)
 	return c
 }

@@ -63,7 +63,8 @@ func (t *DBManager) Store(name string) *gorm.DB {
 
 func NewDBManager(opts ...optionFunc) *DBManager {
 	m := &DBManager{
-		opts: setDefaultDbManagerOptions(),
+		instance: make(map[string]*gorm.DB),
+		opts:     setDefaultDbManagerOptions(),
 	}
 	//
 	m.applyOption(opts...)
