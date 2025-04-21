@@ -90,7 +90,9 @@ func (t *Connection) withOptionFunc(opts ...OptionFunc) {
 }
 
 func NewConnection(opts ...OptionFunc) *Connection {
-	c := &Connection{}
+	c := &Connection{
+		opts: setDefaultOptions(),
+	}
 	c.withOptionFunc(opts...)
 	return c
 }

@@ -4,6 +4,8 @@ import (
 	"gorm.io/plugin/dbresolver"
 )
 
+type OptionFunc func(*Connection)
+
 type ConnectionOptions struct {
 	Driver          string              `mapstructure:"driver" json:"driver" yaml:"driver"`                                     //
 	Dsn             string              `mapstructure:"dsn" json:"dsn" yaml:"dsn"`                                              //
@@ -15,7 +17,15 @@ type ConnectionOptions struct {
 	Registers       []dbresolver.Config `mapstructure:"registers" json:"registers" yaml:"registers"`                            //
 }
 
-type OptionFunc func(*Connection)
+func setDefaultOptions() ConnectionOptions {
+	return ConnectionOptions{
+		Driver:          "mysql",
+		ConnMaxIdletime: 5,
+		ConnMaxLifetime: 10,
+		MaxIdleConns:    10,
+		MaxOpenConns:    100,
+	}
+}
 
 func WithConnectConfig(conf ConnectionOptions) OptionFunc {
 	return func(c *Connection) {
