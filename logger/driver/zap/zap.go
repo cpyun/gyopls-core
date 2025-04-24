@@ -27,7 +27,7 @@ func (l *zapLog) init() {
 	zapCore := zapcore.NewTee(allCore...)
 	log := zap.New(zapCore,
 		zap.AddCaller(),
-		zap.AddCallerSkip(l.opts.callerSkipKey),
+		zap.AddCallerSkip(l.opts.callerSkip),
 		zap.AddStacktrace(zap.ErrorLevel),
 		zap.Fields(fields...),
 	)
@@ -61,6 +61,9 @@ func (l *zapLog) getZapConfig() zap.Config {
 
 	// Level
 	zapConfig.Level.SetLevel(l.opts.level)
+	zapConfig.EncoderConfig.TimeKey = l.opts.timeKey
+	zapConfig.EncoderConfig.CallerKey = l.opts.callerKey
+	zapConfig.EncoderConfig.StacktraceKey = l.opts.stackTraceKey
 
 	// EncoderConfig
 	zapConfig.EncoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
