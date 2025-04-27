@@ -112,3 +112,12 @@ func NewRedis(opts ...OptionFunc) contract.CacheHandlerInterface {
 	r.init()
 	return r
 }
+
+func NewRedisWithClient(c *redis.Client, opts ...OptionFunc) contract.CacheHandlerInterface {
+	r := &redisApt{
+		handler: c,
+		opts:    setDefaultOptions(),
+	}
+	r.withOptions(opts...)
+	return r
+}
