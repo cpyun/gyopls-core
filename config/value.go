@@ -1,6 +1,7 @@
-package reader
+package config
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -17,6 +18,8 @@ type Value interface {
 	Duration() (time.Duration, error)
 	Slice() ([]Value, error)
 	Map() (map[string]Value, error)
+	Scan(any) error
+	Load() any
 	Store(any)
 }
 
@@ -32,8 +35,10 @@ func (v *atomicValue) Bool() (bool, error) {
 	switch val := v.Load().(type) {
 	case bool:
 		return val, nil
-	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64, string:
+	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:
 		return strconv.ParseBool(fmt.Sprint(val))
+	case string:
+		return strconv.ParseBool(val)
 	}
 	return false, v.typeAssertError()
 }
@@ -150,4 +155,15 @@ func (v *atomicValue) Duration() (time.Duration, error) {
 		return 0, err
 	}
 	return time.Duration(val), nil
+}
+
+func (v *atomicValue) Scan(obj any) error {
+	data, err := json.Marshal(v.Load())
+	if err != nil {
+		return err
+	}
+	// if pb, ok := obj.(proto.Message); ok {
+	// 	return kratosjson.UnmarshalOptions.Unmarshal(data, pb)
+	// }
+	return json.Unmarshal(data, obj)
 }

@@ -3,7 +3,7 @@ package env
 import (
 	"time"
 
-	"github.com/cpyun/gyopls-core/config/source"
+	"github.com/cpyun/gyopls-core/config"
 	"github.com/spf13/viper"
 )
 
@@ -30,11 +30,11 @@ func (e *env) init() {
 	}
 }
 
-func (e *env) Read() (*source.ChangeSet, error) {
+func (e *env) Load() (*config.ChangeSet, error) {
 	// 自动加载环境变量
 	e.viper.AutomaticEnv()
 
-	cs := &source.ChangeSet{
+	cs := &config.ChangeSet{
 		Format:    "json",
 		Source:    e.String(),
 		Timestamp: time.Now(),
@@ -45,15 +45,15 @@ func (e *env) Read() (*source.ChangeSet, error) {
 	return cs, nil
 }
 
-func (e *env) Watch() (source.Watcher, error) {
-	return nil, source.ErrWatcherStopped
+func (e *env) Watch() (config.Watcher, error) {
+	return nil, config.ErrWatcherStopped
 }
 
 func (e *env) String() string {
 	return "env"
 }
 
-func New(opts ...optionFn) source.Source {
+func New(opts ...optionFn) config.Source {
 	e := &env{
 		viper: viper.GetViper(),
 		opts:  setDefaultOption(),

@@ -2,14 +2,11 @@ package env
 
 import (
 	"strings"
-
-	"github.com/cpyun/gyopls-core/config/source"
 )
 
 type optionFn func(*envOptions)
 
 type envOptions struct {
-	source.Option
 	prefix   string
 	replacer *strings.Replacer
 }

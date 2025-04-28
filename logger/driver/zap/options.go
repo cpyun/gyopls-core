@@ -10,7 +10,10 @@ import (
 type zapOption struct {
 	mode          string
 	level         zapcore.Level
-	callerSkipKey int
+	timeKey       string
+	callerKey     string
+	stackTraceKey string
+	callerSkip    int
 	namespaceKey  string
 	timeFormat    string
 	output        []zapcore.WriteSyncer // 默认console writer
@@ -22,7 +25,10 @@ func setDefaultOptions() zapOption {
 	return zapOption{
 		mode:          "production",
 		level:         zapcore.DebugLevel,
-		callerSkipKey: 3,
+		timeKey:       "time",
+		callerKey:     "caller",
+		stackTraceKey: "stacktrace",
+		callerSkip:    3,
 		timeFormat:    "2006-01-02T15:04:05.000Z07:00",
 		output:        []zapcore.WriteSyncer{zapcore.Lock(os.Stdout)},
 	}
@@ -36,7 +42,7 @@ func WithModel(name string) OptionFunc {
 
 func WithCallerSkip(i int) OptionFunc {
 	return func(o *zapOption) {
-		o.callerSkipKey += i
+		o.callerSkip += i
 	}
 }
 
