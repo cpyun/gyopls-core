@@ -1,13 +1,8 @@
 package file
 
-import (
-	"github.com/cpyun/gyopls-core/config/source"
-)
-
 type optionFn func(*fileOptions)
 
 type fileOptions struct {
-	source.Option
 	file string
 	path []string
 }

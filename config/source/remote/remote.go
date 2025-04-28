@@ -3,7 +3,7 @@ package remote
 import (
 	"time"
 
-	"github.com/cpyun/gyopls-core/config/source"
+	"github.com/cpyun/gyopls-core/config"
 	"github.com/spf13/viper"
 )
 
@@ -17,7 +17,6 @@ func (r *remote) applyOptions(opts ...optionFn) {
 }
 
 func (r *remote) init() {
-	r.viper = viper.GetViper()
 	r.viper.SetConfigType("properties")
 
 	if len(r.providers) > 0 {
@@ -27,10 +26,10 @@ func (r *remote) init() {
 	}
 }
 
-func (r *remote) Read() (*source.ChangeSet, error) {
+func (r *remote) Load() (*config.ChangeSet, error) {
 	err := r.viper.ReadRemoteConfig()
 
-	cs := &source.ChangeSet{
+	cs := &config.ChangeSet{
 		Format:    "json",
 		Source:    r.String(),
 		Timestamp: time.Now(),
@@ -41,17 +40,19 @@ func (r *remote) Read() (*source.ChangeSet, error) {
 	return cs, err
 }
 
-func (r *remote) Watch() (source.Watcher, error) {
+func (r *remote) Watch() (config.Watcher, error) {
 	// not supported
-	return nil, source.ErrWatcherStopped
+	return nil, config.ErrWatcherStopped
 }
 
 func (r *remote) String() string {
 	return "remote"
 }
 
-func New(opts ...optionFn) source.Source {
-	r := &remote{}
+func New(opts ...optionFn) config.Source {
+	r := &remote{
+		viper: viper.GetViper(),
+	}
 	r.applyOptions(opts...)
 
 	r.init()

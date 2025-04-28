@@ -1,25 +1,21 @@
 package config
 
-import (
-	"github.com/cpyun/gyopls-core/config/source"
-)
+type OptionFunc func(opts *options)
 
-type OptionFunc func(opts *configOptions)
-
-type configOptions struct {
-	sources   []source.Source
+type options struct {
+	sources   []Source
 	callbacks []func()
 }
 
-func setDefaultOption() configOptions {
-	return configOptions{
-		sources:   make([]source.Source, 0),
+func setDefaultOption() options {
+	return options{
+		sources:   make([]Source, 0),
 		callbacks: make([]func(), 0),
 	}
 }
 
-func WithSources(s ...source.Source) OptionFunc {
-	return func(t *configOptions) {
+func WithSources(s ...Source) OptionFunc {
+	return func(t *options) {
 		t.sources = append(t.sources, s...)
 	}
 }

@@ -1,7 +1,7 @@
 package file
 
 import (
-	"github.com/cpyun/gyopls-core/config/source"
+	"github.com/cpyun/gyopls-core/config"
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
 )
@@ -11,7 +11,7 @@ type watcher struct {
 	exit chan bool
 }
 
-func newWatcher(f *file) (source.Watcher, error) {
+func newWatcher(f *file) (config.Watcher, error) {
 	w := &watcher{
 		f:    f,
 		exit: make(chan bool, 1),
@@ -20,10 +20,10 @@ func newWatcher(f *file) (source.Watcher, error) {
 
 	return w, nil
 }
-func (w *watcher) Next() (set *source.ChangeSet, err error) {
+func (w *watcher) Next() (set *config.ChangeSet, err error) {
 	select {
 	case <-w.exit:
-		set, err = w.f.Read()
+		set, err = w.f.Load()
 		return
 	}
 }

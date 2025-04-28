@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/cpyun/gyopls-core/config/source"
+	"github.com/cpyun/gyopls-core/config"
 	"github.com/spf13/viper"
 )
 
@@ -26,13 +26,13 @@ func (f *file) init() {
 	}
 }
 
-func (f *file) Read() (*source.ChangeSet, error) {
+func (f *file) Load() (*config.ChangeSet, error) {
 	err := f.viper.ReadInConfig()
 	if err != nil || errors.As(err, &viper.ConfigFileNotFoundError{}) {
 		return nil, err
 	}
 
-	cs := &source.ChangeSet{
+	cs := &config.ChangeSet{
 		Format:    filepath.Ext(f.opts.file),
 		Source:    f.String(),
 		Timestamp: time.Now(),
@@ -43,11 +43,11 @@ func (f *file) Read() (*source.ChangeSet, error) {
 	return cs, nil
 }
 
-func (f *file) Watch() (source.Watcher, error) {
+func (f *file) Watch() (config.Watcher, error) {
 	return newWatcher(f)
 }
 
-func (f *file) Write(_ *source.ChangeSet) error {
+func (f *file) Write(_ *config.ChangeSet) error {
 	return nil
 }
 
@@ -55,7 +55,7 @@ func (f *file) String() string {
 	return "file"
 }
 
-func New(opts ...optionFn) source.Source {
+func New(opts ...optionFn) config.Source {
 	f := &file{
 		viper: viper.GetViper(),
 		opts:  setDefaultOptions(),
