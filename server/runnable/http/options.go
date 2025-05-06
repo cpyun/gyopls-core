@@ -31,7 +31,7 @@ func setDefaultOption() httpOptions {
 		writeTimeout: 60 * time.Second,
 	}
 	h.startedHook = func() {
-		fmt.Printf("[http] server listening on %s \r\n", h.addr)
+		fmt.Println("[http] server startup successful")
 	}
 
 	return h
@@ -62,16 +62,16 @@ func WithHandler(handler http.Handler) OptionFunc {
 }
 
 // WithReadTimeout 设置读超时
-func WithReadTimeout(d int) OptionFunc {
+func WithReadTimeout(d time.Duration) OptionFunc {
 	return func(o *httpOptions) {
-		o.readTimeout = time.Duration(d)
+		o.readTimeout = d
 	}
 }
 
 // WithWriteTimeout 设置写超时
-func WithWriteTimeout(d int) OptionFunc {
+func WithWriteTimeout(d time.Duration) OptionFunc {
 	return func(o *httpOptions) {
-		o.writeTimeout = time.Duration(d)
+		o.writeTimeout = d
 	}
 }
 
@@ -86,29 +86,5 @@ func WithStartedHook(f func()) OptionFunc {
 func WithEndHook(f func()) OptionFunc {
 	return func(o *httpOptions) {
 		o.endHook = f
-	}
-}
-
-// WithCert 设置cert
-//
-// Deprecated: Set tls cert.
-// punctuation properly. Use WithTlsOption instead.
-func WithCert(s string) OptionFunc {
-	return func(o *httpOptions) {
-		o.cert = &cert{
-			certFile: s,
-		}
-	}
-}
-
-// WithKey 设置key
-//
-// Deprecated: Set tls key.
-// punctuation properly. Use WithKey instead.
-func WithKey(s string) OptionFunc {
-	return func(o *httpOptions) {
-		o.cert = &cert{
-			keyFile: s,
-		}
 	}
 }
