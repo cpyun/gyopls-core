@@ -3,7 +3,6 @@ package http
 import (
 	"context"
 	"fmt"
-	"net"
 	"net/http"
 
 	"github.com/cpyun/gyopls-core/server"
@@ -35,9 +34,6 @@ func (e *httpApt) Start(ctx context.Context) (err error) {
 		Handler:      e.opts.handler,
 		ReadTimeout:  e.opts.readTimeout,
 		WriteTimeout: e.opts.writeTimeout,
-		BaseContext: func(_ net.Listener) context.Context {
-			return ctx
-		},
 	}
 	e.started = true
 	if e.opts.startedHook != nil {
@@ -67,7 +63,6 @@ func (e *httpApt) Attempt() bool {
 
 // Shutdown 停止
 func (e *httpApt) Shutdown(ctx context.Context) error {
-	<-ctx.Done()
 	return e.srv.Shutdown(ctx)
 }
 

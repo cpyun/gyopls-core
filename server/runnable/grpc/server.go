@@ -95,9 +95,8 @@ func (e *Server) Attempt() bool {
 }
 
 func (e *Server) Shutdown(ctx context.Context) error {
-	<-ctx.Done()
-	e.options.endHook()
-
 	e.srv.GracefulStop()
+
+	e.options.endHook()
 	return nil
 }
