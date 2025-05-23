@@ -9,9 +9,9 @@ import (
 )
 
 type Server struct {
-	services    map[string]Runnable
-	mutex       sync.RWMutex
-	errGroup    *errgroup.Group
+	servers     map[string]Runnable
+	lock        sync.RWMutex
+	eg          *errgroup.Group
 	internalCtx context.Context
 	opts        options
 }
@@ -19,8 +19,8 @@ type Server struct {
 // New 实例化
 func New(opts ...OptionFunc) *Server {
 	s := &Server{
-		services: make(map[string]Runnable),
-		opts:     setDefaultOptions(),
+		servers: make(map[string]Runnable),
+		opts:    setDefaultOptions(),
 	}
 	s.applyOptions(opts...)
 	return s
@@ -34,36 +34,32 @@ func (e *Server) applyOptions(opts ...OptionFunc) {
 
 // Add 添加 runnable
 func (e *Server) Add(r ...Runnable) {
-	e.mutex.Lock()
-	defer e.mutex.Unlock()
+	e.lock.Lock()
+	defer e.lock.Unlock()
 
-	if e.services == nil {
-		e.services = make(map[string]Runnable)
+	if e.servers == nil {
+		e.servers = make(map[string]Runnable)
 	}
 
 	for _, v := range r {
-		e.services[v.String()] = v
+		e.servers[v.String()] = v
 	}
 }
 
 // Start 启动 runnable
 func (e *Server) Start(ctx context.Context) (err error) {
-	e.errGroup, e.internalCtx = errgroup.WithContext(ctx)
+	e.eg, e.internalCtx = errgroup.WithContext(ctx)
 	// 启动
-	e.mutex.RLock()
-	for _, srv := range e.services {
-		e.errGroup.Go(func() error {
+	e.lock.RLock()
+	for _, srv := range e.servers {
+		e.eg.Go(func() error {
 			return e.startRunnable(srv)
 		})
 	}
-	e.mutex.RUnlock()
+	e.lock.RUnlock()
 
-	// 监听e.internalCtx.Done()，关闭所有Server
-	e.errGroup.Go(func() error {
-		return e.shutdownStopComplete()
-	})
 	//
-	if err = e.errGroup.Wait(); err != nil {
+	if err = e.eg.Wait(); err != nil {
 		return err
 	}
 
@@ -82,11 +78,9 @@ func (e *Server) startRunnable(r Runnable) error {
 	return nil
 }
 
-func (e *Server) shutdownStopComplete() error {
-	<-e.internalCtx.Done() // 等待 context 被取消
-
+func (e *Server) shutdownStopComplete(ctx context.Context) error {
 	fmt.Printf("waiting for all runnables to end within grace period of %.2f second\r\n", e.opts.gracefulShutdownTimeout.Seconds())
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), e.opts.gracefulShutdownTimeout)
+	shutdownCtx, cancel := context.WithTimeout(ctx, e.opts.gracefulShutdownTimeout)
 	defer cancel()
 	return e.engageStopProcedure(shutdownCtx)
 }
@@ -94,7 +88,7 @@ func (e *Server) shutdownStopComplete() error {
 // 启动停止程序
 func (e *Server) engageStopProcedure(ctx context.Context) error {
 	var wg sync.WaitGroup
-	for _, srv := range e.services {
+	for _, srv := range e.servers {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -109,8 +103,5 @@ func (e *Server) engageStopProcedure(ctx context.Context) error {
 }
 
 func (e *Server) Shutdown(ctx context.Context) (err error) {
-	e.errGroup.Go(func() error {
-		return fmt.Errorf("server shutdown")
-	})
-	return nil
+	return e.shutdownStopComplete(ctx)
 }
